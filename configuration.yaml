@@ -25,9 +25,9 @@ google_assistant:
 zha:
   zigpy_config:
     ota:
-      ikea_provider: true                        # Auto update Trådfri devices
-      ledvance_provider: true                # Auto update LEDVANCE/OSRAM devices
-      salus_provider: true                      # Auto update SALUS/Computime devices
-      inovelli_provider: true                   # Auto update INOVELLI devices
-      thirdreality_provider: true             # Auto update 3REALITY devices
-      otau_directory: /config/zb_ota_auto_update # Use .ota files to update others
+      extra_providers:
+        - type: 'ikea'
+        - type: 'ledvance'
+        - type: 'salus'
+        - type: 'inovelli'
+        - type: 'thirdreality'
