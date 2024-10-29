@@ -1,0 +1,33 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+http:
+    use_x_forwarded_for: true
+    trusted_proxies: 192.168.1.180
+
+google_assistant:
+    project_id: home-assistant-h-1605267715757
+    service_account: !include SERVICE_ACCOUNT.JSON
+    report_state: true
+    exposed_domains:
+      - switch
+      - light
+
+zha:
+  zigpy_config:
+    ota:
+      ikea_provider: true                        # Auto update Trådfri devices
+      ledvance_provider: true                # Auto update LEDVANCE/OSRAM devices
+      salus_provider: true                      # Auto update SALUS/Computime devices
+      inovelli_provider: true                   # Auto update INOVELLI devices
+      thirdreality_provider: true             # Auto update 3REALITY devices
+      otau_directory: /config/zb_ota_auto_update # Use .ota files to update others

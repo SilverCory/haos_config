@@ -1,0 +1,52 @@
+- id: '1729550720085'
+  name: Living Room Lost Something
+  entities:
+    switch.back:
+      icon: mdi:floor-lamp
+      friendly_name: Back
+      state: 'off'
+    switch.sonoff_zbminil2_switch_2:
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Big Light (Front) Switch
+      state: 'on'
+    switch.shelf_light:
+      icon: mdi:floor-lamp
+      friendly_name: Shelf
+      state: 'off'
+    switch.door:
+      icon: mdi:floor-lamp
+      friendly_name: Door
+      state: 'off'
+    switch.sonoff_zbminil2_switch:
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Big Light (Back) Switch
+      state: 'on'
+  icon: mdi:account-group
+  metadata:
+    switch.door:
+      entity_only: true
+- id: '1729621855340'
+  name: Living Room OMBIANCE
+  entities:
+    switch.back:
+      icon: mdi:floor-lamp
+      friendly_name: Back
+      state: 'on'
+    switch.sonoff_zbminil2_switch_2:
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Big Light (Front) Switch
+      state: 'off'
+    switch.shelf_light:
+      icon: mdi:floor-lamp
+      friendly_name: Shelf
+      state: 'on'
+    switch.sonoff_zbminil2_switch:
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Big Light (Back) Switch
+      state: 'off'
+    switch.door:
+      icon: mdi:floor-lamp
+      friendly_name: Door
+      state: 'on'
+  icon: mdi:account-group
+  metadata: {}
