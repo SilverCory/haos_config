@@ -21,31 +21,20 @@ blueprint:
         entity:
           domain: switch
     off_duration:
-      name: Duration (hours)
-      description: Duration in hours for the entities to be off before turning back on.
+      name: Off Duration
+      description: Duration in HH:MM:SS for which the entities should remain off before turning back on.
       selector:
-        number:
-          min: 0
-          max: 24
-          unit_of_measurement: hours
-          mode: slider
-          step: 1
+        duration: {}
 
 trigger:
   - platform: state
     entity_id: !input entity_one
     to: "off"
-    for:
-      hours: !input off_duration
-      minutes: 0
-      seconds: 0
+    for: !input off_duration
   - platform: state
     entity_id: !input entity_two
     to: "off"
-    for:
-      hours: !input off_duration
-      minutes: 0
-      seconds: 0
+    for: !input off_duration
 
 condition: []
 
@@ -56,4 +45,4 @@ action:
         - !input entity_one
         - !input entity_two
 
-mode: restart
+mode: single
