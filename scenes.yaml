@@ -26,12 +26,14 @@
     switch.door:
       entity_only: true
 - id: '1729621855340'
-  name: Living Room OMBIANCE
+  name: Living Room OMBIANCE!
   entities:
     switch.back:
+      restored: true
       icon: mdi:floor-lamp
       friendly_name: Back
-      state: 'on'
+      supported_features: 0
+      state: unavailable
     switch.sonoff_zbminil2_switch_2:
       icon: mdi:ceiling-light-multiple
       friendly_name: Big Light (Front) Switch
