@@ -266,19 +266,3 @@
         hours: 0
         minutes: 0
         seconds: 10
-- id: '1730332693728'
-  alias: New Automation
-  description: ''
-  triggers:
-  - type: changed_states
-    device_id: 09c56f2340a199e4d29cbe51a7dbd386
-    entity_id: 3e87e3ca1dbb90804cf675d1d5137c9a
-    domain: switch
-    trigger: device
-  conditions: []
-  actions:
-  - type: turn_off
-    device_id: 09c56f2340a199e4d29cbe51a7dbd386
-    entity_id: 3e87e3ca1dbb90804cf675d1d5137c9a
-    domain: switch
-  mode: single
