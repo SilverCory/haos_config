@@ -26,7 +26,7 @@
     switch.door:
       entity_only: true
 - id: '1729621855340'
-  name: Living Room OMBIANCE!
+  name: Living Room OMBIANCE
   entities:
     switch.back:
       restored: true
