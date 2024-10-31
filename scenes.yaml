@@ -29,11 +29,9 @@
   name: Living Room OMBIANCE
   entities:
     switch.back:
-      restored: true
       icon: mdi:floor-lamp
       friendly_name: Back
-      supported_features: 0
-      state: unavailable
+      state: 'off'
     switch.sonoff_zbminil2_switch_2:
       icon: mdi:ceiling-light-multiple
       friendly_name: Big Light (Front) Switch
@@ -50,5 +48,14 @@
       icon: mdi:floor-lamp
       friendly_name: Door
       state: 'on'
+    light.cupboard_light_2:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      off_with_transition: false
+      off_brightness:
+      friendly_name: Cupboard Light
+      supported_features: 8
+      state: 'off'
   icon: mdi:account-group
   metadata: {}
