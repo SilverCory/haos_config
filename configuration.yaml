@@ -21,6 +21,7 @@ google_assistant:
     exposed_domains:
       - switch
       - light
+      - scene
 
 zha:
   zigpy_config:
