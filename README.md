@@ -1,4 +1,4 @@
-# HAOS Configuration
---------------------
+HAOS Configuration
+==================
 
 Home Assistant Operating System
