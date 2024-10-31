@@ -1,0 +1,14 @@
+confirmable_notification:
+  alias: Confirmable Notification
+  use_blueprint:
+    path: homeassistant/confirmable_notification.yaml
+    input:
+      notify_device: 6a88e095de4f6e84f5b5ad91bb80562f
+      title: Boop
+      message: Hello World
+      confirm_action:
+      - type: turn_on
+        device_id: 3d4dc1ab9ae85c90847c106f193f671b
+        entity_id: 0f80068da1f3973ff992b1322a75f00b
+        domain: light
+  description: ''
