@@ -263,6 +263,6 @@
       coord_switch_a: switch.front_light_coordinator_switch_2
       coord_switch_b: switch.front_light_coordinator_switch
       off_duration:
-        hours: 0
+        hours: 2
         minutes: 0
-        seconds: 10
+        seconds: 0
