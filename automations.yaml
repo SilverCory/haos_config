@@ -249,7 +249,6 @@
     path: silvercory/light_coordinator.yaml
     input:
       switchList:
-      - switch.front_light_coordinator_switch
       - switch.front_light_coordinator_switch_2
       off_duration:
         hours: 0
