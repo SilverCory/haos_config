@@ -29,5 +29,4 @@ jobs:
         uses: frenck/action-home-assistant@v1.4
         with:
           path: "."
-          secrets: ./secrets.fake.yaml
           version: "${{ matrix.version }}"
