@@ -1,20 +1,15 @@
 blueprint:
-  name: Light Coordinator State Reset Template
+  name: Switch State Reset Template
   description: Re-enable light coordinator switches after a period.
   domain: automation
   input:
-    coord_switch_a:
-      name: Coordinator Switch A
+    switchList:
+      name: Switches
       description: The first coordinator switch to reset after a period.
       selector:
         entity:
           domain: switch
-    coord_switch_b:
-      name: Coordinator Switch B
-      description: The second coordinator switch to reset after a period.
-      selector:
-        entity:
-          domain: switch
+          multiple: true
     off_duration:
       name: Off Duration
       description: Duration in HH:MM:SS for which the entities should remain off before turning back on.
@@ -23,11 +18,7 @@ blueprint:
 
 trigger:
   - platform: state
-    entity_id: !input coord_switch_a
-    to: "off"
-    for: !input off_duration
-  - platform: state
-    entity_id: !input coord_switch_b
+    entity_id: !input !input switchList
     to: "off"
     for: !input off_duration
 
@@ -36,8 +27,6 @@ condition: []
 action:
   - service: switch.turn_on
     target:
-      entity_id:
-        - !input coord_switch_a
-        - !input coord_switch_b
+      entity_id: !input switchList
 
 mode: restart
