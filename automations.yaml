@@ -251,9 +251,9 @@
       coord_switch_a: switch.back_light_coordinator_switch
       coord_switch_b: switch.back_light_coordinator_switch_2
       off_duration:
-        hours: 0
+        hours: 2
         minutes: 0
-        seconds: 15
+        seconds: 0
 - id: '1730311190018'
   alias: Front Light Coordinator State Reset
   description: ''
