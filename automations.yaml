@@ -255,3 +255,16 @@
         hours: 0
         minutes: 0
         seconds: 15
+- id: '1730471734076'
+  alias: Switch State Reset Back
+  description: ''
+  use_blueprint:
+    path: silvercory/light_coordinator.yaml
+    input:
+      switchList:
+      - switch.back_light_coordinator_switch_2
+      - switch.back_light_coordinator_switch
+      off_duration:
+        hours: 2
+        minutes: 0
+        seconds: 0
