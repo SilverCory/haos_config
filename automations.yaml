@@ -267,3 +267,22 @@
         hours: 2
         minutes: 0
         seconds: 0
+- id: '1730473086288'
+  alias: New Automation
+  description: ''
+  triggers: []
+  conditions: []
+  actions:
+  - repeat:
+      count: 15
+      sequence:
+      - device_id: 9f608fa6393f7f5088cedf164721725d
+        domain: light
+        entity_id: e91d227551a5e7c7602e8c847cb531a8
+        type: flash
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 1
+          milliseconds: 0
+  mode: single
