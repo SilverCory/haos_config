@@ -276,11 +276,10 @@
   - repeat:
       count: 15
       sequence:
-      - type: turn_on
+      - type: toggle
         device_id: 9f608fa6393f7f5088cedf164721725d
         entity_id: e91d227551a5e7c7602e8c847cb531a8
         domain: light
-        flash: short
       - delay:
           hours: 0
           minutes: 0
