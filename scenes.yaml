@@ -78,7 +78,7 @@
     switch.front_light_coordinator_switch_2:
       icon: mdi:wall-sconce-outline
       friendly_name: Front Light Coordinator Wall
-      state: 'on'
+      state: 'off'
     light.front_light:
       supported_color_modes:
       - onoff
