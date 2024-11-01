@@ -90,3 +90,4 @@
       supported_features: 8
       state: 'off'
   metadata: {}
+  icon: mdi:snowflake
