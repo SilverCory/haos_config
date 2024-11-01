@@ -1,139 +1,139 @@
-- id: '1729550720085'
+- id: "1729550720085"
   name: Living Room Lost Something
   entities:
     switch.back:
       icon: mdi:floor-lamp
       friendly_name: Back
-      state: 'off'
+      state: "off"
     switch.sonoff_zbminil2_switch_2:
       icon: mdi:ceiling-light-multiple
       friendly_name: Big Light (Front) Switch
-      state: 'on'
+      state: "on"
     switch.shelf_light:
       icon: mdi:floor-lamp
       friendly_name: Shelf
-      state: 'off'
+      state: "off"
     switch.door:
       icon: mdi:floor-lamp
       friendly_name: Door
-      state: 'off'
+      state: "off"
     switch.sonoff_zbminil2_switch:
       icon: mdi:ceiling-light-multiple
       friendly_name: Big Light (Back) Switch
-      state: 'on'
+      state: "on"
     light.cupboard_light_2:
       supported_color_modes:
-      - onoff
+        - onoff
       color_mode:
       off_with_transition: false
       off_brightness:
       friendly_name: Cupboard Light
       supported_features: 8
-      state: 'off'
+      state: "off"
   icon: mdi:account-group
   metadata:
     switch.door:
       entity_only: true
-- id: '1729621855340'
+- id: "1729621855340"
   name: Living Room ambience
   entities:
     switch.back:
       icon: mdi:floor-lamp
       friendly_name: Back
-      state: 'off'
+      state: "off"
     switch.sonoff_zbminil2_switch_2:
       icon: mdi:ceiling-light-multiple
       friendly_name: Big Light (Front) Switch
-      state: 'off'
+      state: "off"
     switch.shelf_light:
       icon: mdi:floor-lamp
       friendly_name: Shelf
-      state: 'on'
+      state: "on"
     switch.sonoff_zbminil2_switch:
       icon: mdi:ceiling-light-multiple
       friendly_name: Big Light (Back) Switch
-      state: 'off'
+      state: "off"
     switch.door:
       icon: mdi:floor-lamp
       friendly_name: Door
-      state: 'on'
+      state: "on"
     light.cupboard_light_2:
       supported_color_modes:
-      - onoff
+        - onoff
       color_mode: onoff
       off_with_transition: false
       off_brightness:
       friendly_name: Cupboard Light
       supported_features: 8
-      state: 'on'
+      state: "on"
   icon: mdi:account-group
   metadata: {}
-- id: '1730472050294'
+- id: "1730472050294"
   name: Lights Ambience
   entities:
     switch.front_light_coordinator_switch:
       icon: mdi:floor-lamp
       friendly_name: Front Light Coordinator Standing
-      state: 'on'
+      state: "on"
     switch.front_light_coordinator_switch_2:
       icon: mdi:wall-sconce-outline
       friendly_name: Front Light Coordinator Wall
-      state: 'off'
+      state: "off"
     light.front_light:
       supported_color_modes:
-      - onoff
+        - onoff
       color_mode: onoff
       off_with_transition: false
       off_brightness:
       icon: mdi:lamps-outline
       friendly_name: Front Lights
       supported_features: 8
-      state: 'on'
+      state: "on"
   metadata: {}
   icon: mdi:snowflake
-- id: '1730472113897'
+- id: "1730472113897"
   name: Lights See
   entities:
     switch.front_light_coordinator_switch:
       icon: mdi:floor-lamp
       friendly_name: Front Light Coordinator Standing
-      state: 'on'
+      state: "on"
     switch.front_light_coordinator_switch_2:
       icon: mdi:wall-sconce-outline
       friendly_name: Front Light Coordinator Wall
-      state: 'on'
+      state: "on"
     light.front_light:
       supported_color_modes:
-      - onoff
+        - onoff
       color_mode: onoff
       off_with_transition: false
       off_brightness:
       icon: mdi:lamps-outline
       friendly_name: Front Lights
       supported_features: 8
-      state: 'on'
+      state: "on"
   metadata: {}
   icon: mdi:eye-check
-- id: '1730472172651'
+- id: "1730472172651"
   name: Lights Motion
   entities:
     switch.front_light_coordinator_switch:
       icon: mdi:floor-lamp
       friendly_name: Front Light Coordinator Standing
-      state: 'off'
+      state: "off"
     switch.front_light_coordinator_switch_2:
       icon: mdi:wall-sconce-outline
       friendly_name: Front Light Coordinator Wall
-      state: 'on'
+      state: "on"
     light.front_light:
       supported_color_modes:
-      - onoff
+        - onoff
       color_mode:
       off_with_transition: false
       off_brightness:
       icon: mdi:lamps-outline
       friendly_name: Front Lights
       supported_features: 8
-      state: 'off'
+      state: "off"
   metadata: {}
   icon: mdi:magnify-expand

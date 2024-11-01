@@ -1,4 +1,3 @@
-
 # Loads default set of integrations. Do not remove.
 default_config:
 
@@ -11,27 +10,27 @@ script: !include scripts.yaml
 scene: !include scenes.yaml
 
 http:
-    use_x_forwarded_for: true
-    trusted_proxies: 192.168.1.180
+  use_x_forwarded_for: true
+  trusted_proxies: 192.168.1.180
 
 google_assistant:
-    project_id: home-assistant-h-1605267715757
-    service_account: !include SERVICE_ACCOUNT.JSON
-    report_state: true
-    exposed_domains:
-      - switch
-      - light
-      - scene
+  project_id: home-assistant-h-1605267715757
+  service_account: !include SERVICE_ACCOUNT.JSON
+  report_state: true
+  exposed_domains:
+    - switch
+    - light
+    - scene
 
 zha:
   zigpy_config:
     ota:
       extra_providers:
-        - type: 'ikea'
-        - type: 'ledvance'
-        - type: 'salus'
-        - type: 'inovelli'
-        - type: 'thirdreality'
+        - type: "ikea"
+        - type: "ledvance"
+        - type: "salus"
+        - type: "inovelli"
+        - type: "thirdreality"
 
 binary_sensor:
   - platform: hikvision
