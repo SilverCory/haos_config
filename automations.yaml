@@ -283,6 +283,6 @@
       - delay:
           hours: 0
           minutes: 0
-          seconds: 3
-          milliseconds: 0
+          seconds: 0
+          milliseconds: 300
   mode: single
