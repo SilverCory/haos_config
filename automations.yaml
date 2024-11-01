@@ -263,6 +263,7 @@
     input:
       switchList:
       - switch.back_light_coordinator_switch
+      - switch.back_light_coordinator_switch_2
       off_duration:
         hours: 2
         minutes: 0
