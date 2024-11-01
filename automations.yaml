@@ -242,18 +242,6 @@
     entity_id: 70da9f9c09aa0e6e8d6a0b356c88a075
     domain: light
   mode: single
-- id: '1730311091871'
-  alias: Back Light Coordinator State Reset
-  description: ''
-  use_blueprint:
-    path: silvercory/light_coordinator.yaml
-    input:
-      coord_switch_a: switch.back_light_coordinator_switch
-      coord_switch_b: switch.back_light_coordinator_switch_2
-      off_duration:
-        hours: 2
-        minutes: 0
-        seconds: 0
 - id: '1730311190018'
   alias: Front Light Coordinator State Reset
   description: ''
