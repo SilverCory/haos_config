@@ -267,21 +267,3 @@
         hours: 2
         minutes: 0
         seconds: 0
-- id: '1732309695336'
-  alias: New Automation
-  description: ''
-  triggers: []
-  conditions: []
-  actions:
-  - repeat:
-      count: 6
-      sequence:
-      - action: light.toggle
-        metadata: {}
-        data:
-          flash: short
-        target:
-          floor_id:
-          - downstairs
-          - upstairs
-  mode: single
