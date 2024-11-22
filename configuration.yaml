@@ -21,6 +21,7 @@ google_assistant:
     - switch
     - light
     - scene
+    - camera
 
 zha:
   zigpy_config:
