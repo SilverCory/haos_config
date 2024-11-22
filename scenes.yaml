@@ -41,6 +41,22 @@
       supported_features: 0
       icon: mdi:lamp
       state: 'on'
+    light.big_light_back_switch:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Big Light (Back) Switch
+      supported_features: 0
+      state: 'off'
+    light.big_light_front_switch:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Big Light (Front) Switch
+      supported_features: 0
+      state: 'off'
   icon: mdi:account-group
   metadata: {}
 - id: '1730472050294'
