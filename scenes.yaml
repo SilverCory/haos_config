@@ -112,3 +112,64 @@
       state: 'off'
   metadata: {}
   icon: mdi:magnify-expand
+- id: '1732309987049'
+  name: Lost Something
+  entities:
+    light.back_switch:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Back
+      supported_features: 0
+      icon: mdi:floor-lamp
+      state: 'off'
+    light.door_switch:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Door
+      supported_features: 0
+      icon: mdi:floor-lamp
+      state: 'off'
+    light.shelf_switch:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Shelf
+      supported_features: 0
+      icon: mdi:lamp
+      state: 'off'
+    light.cat_switch:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Cat
+      supported_features: 0
+      icon: mdi:lamp
+      state: 'off'
+    light.moon_switch:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Moon
+      supported_features: 0
+      icon: mdi:lamp
+      state: 'off'
+    light.big_light_back_switch:
+      supported_color_modes:
+      - onoff
+      color_mode: onoff
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Big Light (Back) Switch
+      supported_features: 0
+      state: 'on'
+    light.big_light_front_switch:
+      supported_color_modes:
+      - onoff
+      color_mode: onoff
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Big Light (Front) Switch
+      supported_features: 0
+      state: 'on'
+  icon: mdi:account-group
+  metadata: {}
