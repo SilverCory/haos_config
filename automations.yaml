@@ -274,7 +274,7 @@
   conditions: []
   actions:
   - repeat:
-      count: 2
+      count: 6
       sequence:
       - action: light.toggle
         metadata: {}
