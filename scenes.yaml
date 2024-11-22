@@ -113,7 +113,7 @@
   metadata: {}
   icon: mdi:magnify-expand
 - id: '1732309987049'
-  name: Lost Something
+  name: Living Room Lost Something
   entities:
     light.back_switch:
       supported_color_modes:
