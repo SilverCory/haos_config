@@ -13,6 +13,8 @@ http:
   use_x_forwarded_for: true
   trusted_proxies: 192.168.1.180
 
+ffmpeg:
+
 google_assistant:
   project_id: home-assistant-h-1605267715757
   service_account: !include SERVICE_ACCOUNT.JSON
