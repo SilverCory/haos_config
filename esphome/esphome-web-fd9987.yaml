@@ -45,28 +45,18 @@ web_server:
 output:
   - platform: esp8266_pwm
     id: output_r
-    min_power: 15%
-    zero_means_zero: True
     pin: GPIO4
   - platform: esp8266_pwm
     id: output_cw
-    min_power: 15%
-    zero_means_zero: True
     pin: GPIO5
   - platform: esp8266_pwm
     pin: GPIO12
-    min_power: 15%
-    zero_means_zero: True
     id: output_g
   - platform: esp8266_pwm
     pin: GPIO13
-    min_power: 15%
-    zero_means_zero: True
     id: output_ww
   - platform: esp8266_pwm
     pin: GPIO14
-    min_power: 15%
-    zero_means_zero: True
     id: output_b
 
 light:
