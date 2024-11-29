@@ -1,6 +1,6 @@
 substitutions:
-  name: esphome-web-fd9987
-  friendly_name: ESPHome Web fd9987
+  name: esphome-corys-light
+  friendly_name: ESPHome Corys Room Light
 
 esphome:
   name: ${name}
