@@ -41,3 +41,32 @@ dashboard_import:
 
 # To have a "next url" for improv serial
 web_server:
+
+output:
+  - platform: esp8266_pwm
+    id: output_r
+    pin: GPIO4
+  - platform: esp8266_pwm
+    id: output_cw
+    pin: GPIO5
+  - platform: esp8266_pwm
+    pin: GPIO12
+    id: output_g
+  - platform: esp8266_pwm
+    pin: GPIO13
+    id: output_ww
+  - platform: esp8266_pwm
+    pin: GPIO14
+    id: output_b
+
+light:
+  - platform: rgbww
+    color_interlock: true
+    name: ${friendly_name}
+    red: output_r
+    green: output_g
+    blue: output_b
+    warm_white: output_ww
+    cold_white: output_cw
+    cold_white_color_temperature: 5700 K
+    warm_white_color_temperature: 3000 K
