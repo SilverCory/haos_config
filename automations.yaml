@@ -311,3 +311,40 @@
     entity_id: 21a004d231482d373b9f4c56576ee52f
     domain: switch
   mode: single
+- id: '1733359237672'
+  alias: Turn Everything Off
+  description: ''
+  triggers:
+  - type: not_occupied
+    device_id: a28dfccb7435331fff4dd2ac950602a1
+    entity_id: bbfb94360bd030931b78c8e3b7ca4584
+    domain: binary_sensor
+    trigger: device
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+  conditions:
+  - condition: time
+    after: '21:00:00'
+    before: 05:00:00
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - sun
+    - fri
+    - sat
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      floor_id: downstairs
+  - action: remote.turn_off
+    metadata: {}
+    data: {}
+    target:
+      floor_id: downstairs
+  mode: single
