@@ -129,7 +129,7 @@
   metadata: {}
   icon: mdi:magnify-expand
 - id: '1733440835956'
-  name: Living Room Lost Something
+  name: Living Room Lost
   entities:
     light.living_room_door_switch_2:
       supported_color_modes:
