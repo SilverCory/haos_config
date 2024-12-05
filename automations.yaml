@@ -30,7 +30,7 @@
     domain: light
   mode: single
 - id: '1730230685787'
-  alias: Larissa's Lamp Bright Up
+  alias: Larissa's Room Lamp Bright Up
   description: ''
   triggers:
   - device_id: c82b911845e876f660de37fa2f9fbc16
