@@ -367,7 +367,7 @@
     above: -0.3
     below: 25
   actions:
-  - type: turn_off
+  - type: turn_on
     device_id: 4876fc70f80c68d8120f8991604d678e
     entity_id: 1fddba12ef62b4d3fd9f8326b024fb0b
     domain: light
