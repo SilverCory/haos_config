@@ -128,3 +128,64 @@
       state: 'on'
   metadata: {}
   icon: mdi:magnify-expand
+- id: '1733440835956'
+  name: Living Room Lost Something
+  entities:
+    light.living_room_door_switch_2:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Living Room Door Light
+      supported_features: 0
+      icon: mdi:floor-lamp-outline
+      state: 'off'
+    light.living_room_shelf_switch_2:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Living Room Shelf Light
+      supported_features: 0
+      icon: mdi:lamp
+      state: 'off'
+    light.living_room_big_light_back_switch:
+      supported_color_modes:
+      - onoff
+      color_mode: onoff
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Living Room Big Light (Back) Switch
+      supported_features: 0
+      state: 'on'
+    light.living_room_big_light_front_switch:
+      supported_color_modes:
+      - onoff
+      color_mode: onoff
+      icon: mdi:ceiling-light-multiple
+      friendly_name: Living Room Big Light (Front) Switch
+      supported_features: 0
+      state: 'on'
+    light.living_room_back_switch_2:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Living Room Back Light
+      supported_features: 0
+      icon: mdi:floor-lamp-outline
+      state: 'off'
+    light.living_room_cat_switch_2:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Living Room Cat Light
+      supported_features: 0
+      icon: mdi:floor-lamp-outline
+      state: 'off'
+    light.living_room_moon_switch_2:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Living Room Moon Light
+      supported_features: 0
+      icon: mdi:lamp-outline
+      state: 'off'
+  icon: mdi:account-group
+  metadata: {}
