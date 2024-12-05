@@ -106,7 +106,7 @@
   metadata: {}
   icon: mdi:eye-check
 - id: '1730472172651'
-  name: Lights Motion
+  name: Front Garden Lights Motion
   entities:
     switch.front_light_coordinator_switch:
       icon: mdi:floor-lamp
