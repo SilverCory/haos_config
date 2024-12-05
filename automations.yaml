@@ -267,3 +267,23 @@
         hours: 2
         minutes: 0
         seconds: 0
+- id: '1733358901662'
+  alias: Sofa Presence On
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: a28dfccb7435331fff4dd2ac950602a1
+    entity_id: 158f97d537d7b6dd65aebb943f67c4ac
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 5e6e95f0b53bbfe13c5cf94ca8d79f86
+    entity_id: 6274ac9a0bf914ea9f3271833c478550
+    domain: switch
+  - type: turn_on
+    device_id: e3b6ad06f2bec68670236ae6b968b6bf
+    entity_id: 21a004d231482d373b9f4c56576ee52f
+    domain: switch
+  mode: single
