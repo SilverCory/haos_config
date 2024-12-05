@@ -211,7 +211,7 @@
     domain: switch
   mode: single
 - id: '1730237288919'
-  alias: Fairly Lights Turn Off
+  alias: Larissa's Room Fairly Lights Turn Off
   description: ''
   triggers:
   - device_id: c82b911845e876f660de37fa2f9fbc16
