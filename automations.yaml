@@ -348,3 +348,27 @@
     target:
       floor_id: downstairs
   mode: single
+- id: '1733429670795'
+  alias: Living Room Presence Back On
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: a28dfccb7435331fff4dd2ac950602a1
+    entity_id: 6ed7c1ad34ac626d0dd9c30c97011df9
+    domain: binary_sensor
+    trigger: device
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.presence_sensor_fp2_dccc_light_sensor_light_level
+    above: -0.3
+    below: 25
+  actions:
+  - type: turn_off
+    device_id: 4876fc70f80c68d8120f8991604d678e
+    entity_id: 1fddba12ef62b4d3fd9f8326b024fb0b
+    domain: light
+  mode: single
