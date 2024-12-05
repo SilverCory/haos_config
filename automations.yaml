@@ -83,7 +83,7 @@
     domain: light
   mode: single
 - id: '1730231700700'
-  alias: Back Lights On
+  alias: Back Garden Lights On
   description: ''
   triggers:
   - device_id: 181e772e0111dc0e88fe7a8c9c8f12d8
