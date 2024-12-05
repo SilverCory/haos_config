@@ -62,7 +62,7 @@
     type: brightness_decrease
   mode: single
 - id: '1730230831207'
-  alias: Larissa's Lamp Off
+  alias: Larissa's Room Lamp Off
   description: ''
   triggers:
   - device_id: c82b911845e876f660de37fa2f9fbc16
