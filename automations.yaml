@@ -147,7 +147,7 @@
     domain: switch
   mode: single
 - id: '1730232125521'
-  alias: Front Lights On
+  alias: Front Garden Lights On
   description: ''
   triggers:
   - device_id: dfa89b76741c348af830d9e836a4f929
