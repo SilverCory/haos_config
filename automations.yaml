@@ -115,7 +115,7 @@
     domain: light
   mode: single
 - id: '1730231901445'
-  alias: Back Lights Wall Toggle
+  alias: Back Garden Lights Wall Toggle
   description: ''
   triggers:
   - device_id: 181e772e0111dc0e88fe7a8c9c8f12d8
