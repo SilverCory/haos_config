@@ -179,7 +179,7 @@
     domain: light
   mode: single
 - id: '1730232229737'
-  alias: Front Lights Standing Toggle
+  alias: Front Garden Lights Standing Toggle
   description: ''
   triggers:
   - device_id: dfa89b76741c348af830d9e836a4f929
