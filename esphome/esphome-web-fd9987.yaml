@@ -67,7 +67,7 @@ lambda:
   - id: sun_color_temp
     name: Sun Color Temperature
     update_interval: 30s
-    lambda: |-
+    lambda: !lambda |-
       auto elevation = id(sun).elevation;
 
       // Define color temperature ranges
@@ -86,7 +86,7 @@ lambda:
   - id: sun_brightness
     name: Sun Brightness
     update_interval: 30s
-    lambda: |-
+    lambda: !lambda |-
       auto elevation = id(sun).elevation;
 
       // Define brightness ranges
