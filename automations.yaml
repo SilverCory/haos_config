@@ -223,7 +223,7 @@
   actions:
   - type: turn_off
     device_id: c1be12d78a8ac8d943f26eab8d7e61d9
-    entity_id: 70da9f9c09aa0e6e8d6a0b356c88a075
+    entity_id: 976ac1df78944e87e6e57e7454c910b9
     domain: light
   mode: single
 - id: '1730237319753'
