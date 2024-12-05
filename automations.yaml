@@ -369,7 +369,7 @@
   actions:
   - type: turn_on
     device_id: 4876fc70f80c68d8120f8991604d678e
-    entity_id: 1fddba12ef62b4d3fd9f8326b024fb0b
+    entity_id: 2889e1b77513343c27b8701b1442ca7d
     domain: light
   mode: single
 - id: '1733429734891'
