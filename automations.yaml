@@ -288,7 +288,7 @@
     domain: switch
   mode: single
 - id: '1733358953976'
-  alias: Sofa Presence Off
+  alias: Living Room Presence Sofa Off
   description: ''
   triggers:
   - type: not_occupied
