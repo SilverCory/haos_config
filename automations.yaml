@@ -163,7 +163,7 @@
     domain: light
   mode: single
 - id: '1730232158467'
-  alias: Front Lights Off
+  alias: Front Garden Lights Off
   description: ''
   triggers:
   - device_id: dfa89b76741c348af830d9e836a4f929
