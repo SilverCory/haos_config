@@ -60,7 +60,7 @@
   icon: mdi:account-group
   metadata: {}
 - id: '1730472050294'
-  name: Lights Ambience
+  name: Front Garden Lights Ambience
   entities:
     switch.front_light_coordinator_switch:
       icon: mdi:floor-lamp
