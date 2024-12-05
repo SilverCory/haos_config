@@ -227,7 +227,7 @@
     domain: light
   mode: single
 - id: '1730237319753'
-  alias: Fairy Lights Turn On
+  alias: Larissa's Room Fairy Lights Turn On
   description: ''
   triggers:
   - device_id: c82b911845e876f660de37fa2f9fbc16
