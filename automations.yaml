@@ -268,7 +268,7 @@
         minutes: 0
         seconds: 0
 - id: '1733358901662'
-  alias: Sofa Presence On
+  alias: Living Room Presence Sofa On
   description: ''
   triggers:
   - type: occupied
