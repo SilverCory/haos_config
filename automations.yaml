@@ -46,7 +46,7 @@
     type: brightness_increase
   mode: single
 - id: '1730230753678'
-  alias: Larissa's Lamp Bright Down
+  alias: Larissa's Room Lamp Bright Down
   description: ''
   triggers:
   - device_id: c82b911845e876f660de37fa2f9fbc16
