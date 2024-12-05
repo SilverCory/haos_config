@@ -1,5 +1,5 @@
 - id: '1729621855340'
-  name: Living Room ambience
+  name: Living Room Ambience
   entities:
     light.living_room_door_switch_2:
       supported_color_modes:
