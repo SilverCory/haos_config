@@ -255,7 +255,7 @@
         minutes: 0
         seconds: 15
 - id: '1730471734076'
-  alias: Switch State Reset Back
+  alias: Back Garden Switch State Reset Back
   description: ''
   use_blueprint:
     path: silvercory/light_coordinator.yaml
