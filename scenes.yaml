@@ -1,62 +1,22 @@
 - id: '1729621855340'
   name: Living Room ambience
   entities:
-    light.back_switch:
+    light.living_room_door_switch_2:
       supported_color_modes:
       - onoff
       color_mode: onoff
-      friendly_name: Back
+      friendly_name: Living Room Door Light
       supported_features: 0
-      icon: mdi:floor-lamp
+      icon: mdi:floor-lamp-outline
       state: 'on'
-    light.door_switch:
+    light.living_room_shelf_switch_2:
       supported_color_modes:
       - onoff
       color_mode: onoff
-      friendly_name: Door
-      supported_features: 0
-      icon: mdi:floor-lamp
-      state: 'on'
-    light.shelf_switch:
-      supported_color_modes:
-      - onoff
-      color_mode: onoff
-      friendly_name: Shelf
+      friendly_name: Living Room Shelf Light
       supported_features: 0
       icon: mdi:lamp
       state: 'on'
-    light.cat_switch:
-      supported_color_modes:
-      - onoff
-      color_mode: onoff
-      friendly_name: Cat
-      supported_features: 0
-      icon: mdi:lamp
-      state: 'on'
-    light.moon_switch:
-      supported_color_modes:
-      - onoff
-      color_mode: onoff
-      friendly_name: Moon
-      supported_features: 0
-      icon: mdi:lamp
-      state: 'on'
-    light.big_light_back_switch:
-      supported_color_modes:
-      - onoff
-      color_mode:
-      icon: mdi:ceiling-light-multiple
-      friendly_name: Big Light (Back) Switch
-      supported_features: 0
-      state: 'off'
-    light.big_light_front_switch:
-      supported_color_modes:
-      - onoff
-      color_mode:
-      icon: mdi:ceiling-light-multiple
-      friendly_name: Big Light (Front) Switch
-      supported_features: 0
-      state: 'off'
   icon: mdi:account-group
   metadata: {}
 - id: '1730472050294'
