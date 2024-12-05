@@ -195,7 +195,7 @@
     domain: switch
   mode: single
 - id: '1730232267337'
-  alias: Front Lights Wall Toggle
+  alias: Front Garden Lights Wall Toggle
   description: ''
   triggers:
   - device_id: dfa89b76741c348af830d9e836a4f929
