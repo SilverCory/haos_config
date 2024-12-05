@@ -322,7 +322,7 @@
     trigger: device
     for:
       hours: 0
-      minutes: 10
+      minutes: 20
       seconds: 0
   conditions:
   - condition: time
