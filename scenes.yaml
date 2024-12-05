@@ -83,7 +83,7 @@
   metadata: {}
   icon: mdi:snowflake
 - id: '1730472113897'
-  name: Lights See
+  name: Front Garden Lights See
   entities:
     switch.front_light_coordinator_switch:
       icon: mdi:floor-lamp
