@@ -312,7 +312,7 @@
     domain: switch
   mode: single
 - id: '1733359237672'
-  alias: Turn Everything Off
+  alias: Living Room Presence Turn Everything Off
   description: ''
   triggers:
   - type: not_occupied
