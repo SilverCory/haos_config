@@ -85,23 +85,23 @@
 - id: '1730472113897'
   name: Front Garden Lights See
   entities:
-    switch.front_light_coordinator_switch:
-      icon: mdi:floor-lamp
-      friendly_name: Front Light Coordinator Standing
-      state: 'on'
-    switch.front_light_coordinator_switch_2:
-      icon: mdi:wall-sconce-outline
-      friendly_name: Front Light Coordinator Wall
-      state: 'on'
-    light.front_light:
+    light.front_garden_light:
       supported_color_modes:
       - onoff
       color_mode: onoff
       off_with_transition: false
       off_brightness:
       icon: mdi:lamps-outline
-      friendly_name: Front Lights
+      friendly_name: Front Garden Lights
       supported_features: 8
+      state: 'on'
+    switch.front_garden_light_coordinator_switch:
+      icon: mdi:floor-lamp
+      friendly_name: Front Garden Light Coordinator Standing
+      state: 'on'
+    switch.front_garden_light_coordinator_switch_2:
+      icon: mdi:wall-sconce-outline
+      friendly_name: Front Garden Light Coordinator Wall
       state: 'on'
   metadata: {}
   icon: mdi:eye-check
