@@ -95,16 +95,12 @@ light:
             float brightness_high = 1.0;  // For high elevation
             float elevation_low = 0;      // Elevation for brightness_low
             float elevation_high = 45;    // Elevation for brightness_high
-            float brightness = brightness_low + (elevation - elevation_low) *
-                               (brightness_high - brightness_low) /
-                               (elevation_high - elevation_low);
+            float brightness = brightness_low + (elevation - elevation_low) * (brightness_high - brightness_low) / (elevation_high - elevation_low);
 
             // Calculate color temperature
             float color_temp_low = 2700;  // For low elevation
             float color_temp_high = 6500; // For high elevation
-            float color_temp = color_temp_low + (elevation - elevation_low) *
-                               (color_temp_high - color_temp_low) /
-                               (elevation_high - elevation_low);
+            float color_temp = color_temp_low + (elevation - elevation_low) * (color_temp_high - color_temp_low) / (elevation_high - elevation_low);
 
             // Set brightness and color temperature with transition
             call.set_brightness(brightness);
