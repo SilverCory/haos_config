@@ -276,6 +276,10 @@
     entity_id: 158f97d537d7b6dd65aebb943f67c4ac
     domain: binary_sensor
     trigger: device
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 2
   conditions: []
   actions:
   - type: turn_on
