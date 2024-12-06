@@ -85,7 +85,7 @@ light:
     effects:
       - lambda:
           name: "Sun Sync"  # Give the effect a descriptive name
-          update_interval: 10s
+          update_interval: 60s
           lambda: |-
             auto elevation = id(sun_home).elevation();
             auto call = id(light_1).turn_on();
@@ -105,5 +105,5 @@ light:
             // Set brightness and color temperature with transition
             call.set_brightness(brightness);
             call.set_color_temperature(color_temp);
-            call.set_transition_length(10s);  // Smooth transition over 10 seconds
+            call.set_transition_length(60000);  // Smooth transition over 10 seconds
             call.perform();
