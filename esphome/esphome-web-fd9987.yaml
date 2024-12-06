@@ -87,7 +87,7 @@ light:
           name: "Sun Sync"  # Give the effect a descriptive name
           update_interval: 10s
           lambda: |-
-            auto elevation = id(sun_home).elevation;
+            auto elevation = id(sun_home).elevation();
             auto call = id(light_1).turn_on();
 
             // Calculate brightness
