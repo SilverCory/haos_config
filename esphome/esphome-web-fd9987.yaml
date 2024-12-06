@@ -61,46 +61,35 @@ output:
 
 # This component provides sun information
 sun:
+  latitude: 0.1
+  longitude: 0.1
 
-# Lambdas for calculating color temperature and brightness with linear interpolation
-lambda:
+# Scripts for calculating color temperature and brightness with linear interpolation
+script:
+  - id: 'hello'
+    then: []
+
   - id: sun_color_temp
-    name: Sun Color Temperature
-    update_interval: 30s
-    lambda: !lambda |-
-      auto elevation = id(sun).elevation;
-
-      // Define color temperature ranges
-      float color_temp_low = 2700;  // For low elevation
-      float color_temp_high = 6500; // For high elevation
-      float elevation_low = 0;      // Elevation for color_temp_low
-      float elevation_high = 45;    // Elevation for color_temp_high
-
-      // Calculate color temperature using linear interpolation
-      float color_temp = color_temp_low + (elevation - elevation_low) * 
-                         (color_temp_high - color_temp_low) / 
-                         (elevation_high - elevation_low);
-
-      return color_temp;
+    then:
+      - lambda: |-
+          auto elevation = id(sun).elevation;
+          float color_temp_low = 2700;  // For low elevation
+          float color_temp_high = 6500; // For high elevation
+          float elevation_low = 0;      // Elevation for color_temp_low
+          float elevation_high = 45;    // Elevation for color_temp_high
+          float color_temp = color_temp_low + (elevation - elevation_low) * (color_temp_high - color_temp_low) / (elevation_high - elevation_low);
+          return color_temp;
 
   - id: sun_brightness
-    name: Sun Brightness
-    update_interval: 30s
-    lambda: !lambda |-
-      auto elevation = id(sun).elevation;
-
-      // Define brightness ranges
-      float brightness_low = 0.2;   // For low elevation
-      float brightness_high = 1.0;  // For high elevation
-      float elevation_low = 0;      // Elevation for brightness_low
-      float elevation_high = 45;    // Elevation for brightness_high
-
-      // Calculate brightness using linear interpolation
-      float brightness = brightness_low + (elevation - elevation_low) * 
-                         (brightness_high - brightness_low) / 
-                         (elevation_high - elevation_low);
-
-      return brightness;
+    then:
+      - lambda: |-
+          auto elevation = id(sun).elevation;
+          float brightness_low = 0.2;   // For low elevation
+          float brightness_high = 1.0;  // For high elevation
+          float elevation_low = 0;      // Elevation for brightness_low
+          float elevation_high = 45;    // Elevation for brightness_high
+          float brightness = brightness_low + (elevation - elevation_low) * (brightness_high - brightness_low) / (elevation_high - elevation_low);
+          return brightness;
 
 light:
   - platform: rgbww
@@ -113,7 +102,7 @@ light:
     cold_white: output_cw
     cold_white_color_temperature: 5700 K
     warm_white_color_temperature: 3000 K
-    color_temperature: !lambda 'return id(sun_color_temp).state;'
-    brightness: !lambda 'return id(sun_brightness).state;'
+    color_temperature: !lambda sun_color_temp
+    brightness: !lambda sun_brightness
     gamma_correct: true       # For smoother brightness transitions
     transition_length: 5s      # Add a transition time (adjust as needed)
