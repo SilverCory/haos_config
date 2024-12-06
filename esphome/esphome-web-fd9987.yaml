@@ -66,8 +66,8 @@ time:
 # This component provides sun information
 sun:
   id: sun_home
-  latitude: 0.1  # Replace with your actual latitude
-  longitude: 0.1 # Replace with your actual longitude
+  latitude: !secret home_lat
+  longitude: !secret home_long
 
 light:
   - platform: rgbww
