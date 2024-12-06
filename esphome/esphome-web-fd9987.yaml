@@ -59,13 +59,15 @@ output:
     pin: GPIO14
     id: output_b
 
-hub:
+time:
+  - platform: homeassistant
+    id: my_time
 
 # This component provides sun information
 sun:
   id: sun_home
-  latitude: 0.1
-  longitude: 0.1
+  latitude: 0.1  # Replace with your actual latitude
+  longitude: 0.1 # Replace with your actual longitude
 
 light:
   - platform: rgbww
@@ -80,24 +82,32 @@ light:
     cold_white_color_temperature: 5700 K
     warm_white_color_temperature: 3000 K
     gamma_correct: true
-    effects: 
-      - lambda: 
+    effects:
+      - lambda:
+          name: "Sun Sync"  # Give the effect a descriptive name
           update_interval: 10s
-          name: "Brightness"
-          lambda: !lambda |-
-            auto elevation = id(sun).elevation;
+          lambda: |-
+            auto elevation = id(sun_home).elevation;
             auto call = id(light_1).turn_on();
-            call.set_transition_length(10000);
+
+            // Calculate brightness
             float brightness_low = 0.2;   // For low elevation
             float brightness_high = 1.0;  // For high elevation
             float elevation_low = 0;      // Elevation for brightness_low
             float elevation_high = 45;    // Elevation for brightness_high
-            float brightness = brightness_low + (elevation - elevation_low) * (brightness_high - brightness_low) / (elevation_high - elevation_low);
+            float brightness = brightness_low + (elevation - elevation_low) *
+                               (brightness_high - brightness_low) /
+                               (elevation_high - elevation_low);
+
+            // Calculate color temperature
             float color_temp_low = 2700;  // For low elevation
             float color_temp_high = 6500; // For high elevation
-            float elevation_low = 0;      // Elevation for color_temp_low
-            float elevation_high = 45;    // Elevation for color_temp_high
-            float color_temp = color_temp_low + (elevation - elevation_low) * (color_temp_high - color_temp_low) / (elevation_high - elevation_low);
-            call.set_effect("The Effect");
+            float color_temp = color_temp_low + (elevation - elevation_low) *
+                               (color_temp_high - color_temp_low) /
+                               (elevation_high - elevation_low);
+
+            // Set brightness and color temperature with transition
+            call.set_brightness(brightness);
+            call.set_color_temperature(color_temp);
+            call.set_transition_length(10s);  // Smooth transition over 10 seconds
             call.perform();
-          
