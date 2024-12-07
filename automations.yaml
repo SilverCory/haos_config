@@ -403,5 +403,5 @@
     path: firkeuf/match-color-temp-kelvin.yaml
     input:
       target_lights:
-      - light.esphome_corys_light_esphome_corys_room_light
+      - light.cory_s_room_big_light
       min_color_temp: 6500
