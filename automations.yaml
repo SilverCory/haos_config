@@ -396,12 +396,3 @@
     entity_id: 2889e1b77513343c27b8701b1442ca7d
     domain: light
   mode: single
-- id: '1733482743270'
-  alias: Match Outside Colour Temperature Kelvin
-  description: ''
-  use_blueprint:
-    path: firkeuf/match-color-temp-kelvin.yaml
-    input:
-      target_lights:
-      - light.cory_s_room_big_light
-      min_color_temp: 6500
