@@ -1,0 +1,104 @@
+blueprint:
+  name: Match Outside Colour Temperature Kelvin
+  description: When a light turns on or the sun elevation changes match the outside
+    colour temperature. It will apply to any bulb that supports color temperature.
+    It triggers whenever a bulb turns on, on sun elevation changes and every 5 minutes.
+  domain: automation
+  input:
+    target_lights:
+      name: Lights
+      description: The primary lights to be controlled
+      selector:
+        entity:
+          domain:
+          - light
+          multiple: true
+    min_color_temp:
+      name: Coolest Color Temperature
+      description: The most blue color your bulbs will be set to
+      default: 4000
+      selector:
+        color_temp:
+          min: 1500
+          max: 7000
+          unit: kelvin
+    max_color_temp:
+      name: Warmest Color Temperature
+      description: The most yellow color your bulbs will be set to
+      default: 2202
+      selector:
+        color_temp:
+          min: 1500
+          max: 7000
+          unit: kelvin
+    brightness_action:
+      name: Brightness
+      description: When a device turns on its color temperature will be set, this
+        may interfere with the brightness, this action will run half a second later
+        to set the light's brightness.
+      selector:
+        action: {}
+      default:
+      - service: light.turn_on
+        data:
+          brightness: '{{max(trigger.to_state.attributes.brightness,2)}}'
+        target:
+          entity_id: '{{trigger.entity_id}}'
+        alias: Default - Set light to its original brightness, don't use brightness
+          1 as it causes issues with some bulbs
+  source_url: https://gist.github.com/HarvsG/cc86381dc99169159d6d4cd870c36e46
+variables:
+  target_lights: !input target_lights
+  target_on_lights: '{{states.light | selectattr(''state'',''eq'',''on'') | selectattr(''attributes.supported_color_modes'',''match'',".*color_temp.*")
+    | map(attribute=''entity_id'') | select("in",target_lights) | list }}'
+  min_color_temp: !input min_color_temp
+  max_color_temp: !input max_color_temp
+  color_temp: '{{ [([(((4791.67 - 3290.66/(1 + 0.222 * ([([0,state_attr(''sun.sun'',
+    ''elevation'')]|max),90]|min**0.81))))|int),max_color_temp]|max),min_color_temp]|min}}'
+trigger:
+- platform: state
+  entity_id: !input target_lights
+  to: 'on'
+  id: single_light_on
+- platform: state
+  entity_id:
+  - sun.sun
+  attribute: elevation
+  id: elevation_change
+- platform: time_pattern
+  minutes: '5'
+  id: every_5_min
+condition:
+- condition: template
+  value_template: '{{ (states.light | selectattr(''state'',''eq'',''on'') | map(attribute=''entity_id'')
+    | list)!= [] }}'
+action:
+- choose:
+  - conditions:
+    - condition: trigger
+      id: single_light_on
+    sequence:
+    - service: light.turn_on
+      data:
+        kelvin: '{{color_temp}}'
+      target:
+        entity_id: '{{trigger.entity_id}}'
+    - delay:
+        milliseconds: 500
+    - choose:
+      default: !input brightness_action
+  - conditions:
+    - condition: or
+      conditions:
+      - condition: trigger
+        id: every_5_min
+      - condition: trigger
+        id: elevation_change
+    sequence:
+    - service: light.turn_on
+      data:
+        kelvin: '{{color_temp}}'
+        transition: 5
+      target:
+        entity_id: '{{target_on_lights}}'
+mode: parallel
