@@ -36,3 +36,5 @@ zha:
         - type: "salus"
         - type: "inovelli"
         - type: "thirdreality"
+
+zha_toolkit:
