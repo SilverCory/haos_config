@@ -217,7 +217,7 @@
   - device_id: c82b911845e876f660de37fa2f9fbc16
     domain: zha
     type: remote_button_long_press
-    subtype: dim_down
+    subtype: dim_up
     trigger: device
   conditions: []
   actions:
