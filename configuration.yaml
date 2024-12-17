@@ -17,6 +17,11 @@ stream:
 
 ffmpeg:
 
+camera:
+  - platform: ffmpeg
+    name: "test1"
+    input: "rtsps://192.168.1.212:7441/IKaf72QSI3G17ptF?enableSrtp"
+
 google_assistant:
   project_id: home-assistant-h-1605267715757
   service_account: !include SERVICE_ACCOUNT.JSON
