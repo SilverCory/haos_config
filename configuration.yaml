@@ -39,3 +39,7 @@ zha:
         - type: "thirdreality"
 
 zha_toolkit:
+
+shell_command: 
+	fm: which ffmpeg
+        av: which avconv
