@@ -12,8 +12,10 @@ from .params import INTERNAL_PARAMS as p
 LOGGER = logging.getLogger(__name__)
 
 BINDABLE_OUT_CLUSTERS = [
+    0x0005,  # Scenes
     0x0006,  # OnOff
     0x0008,  # Level
+    0x0102,  # Window Covering
     0x0300,  # Color Control
 ]
 BINDABLE_IN_CLUSTERS = [
@@ -308,13 +310,15 @@ async def bind_ieee(
 
         for src_ep in src_endpoints:
             LOGGER.debug(
-                "0x%04x: binding %s/EP:%s, out-cluster 0x%04X to %s/EP:%s",
+                "0x%04x: binding %s/EP:%s, out-cluster 0x%04X to %s/EP:%s"
+                " (%r)",
                 src_dev.nwk,
                 str(src_dev.ieee),
                 src_ep,
                 src_out_cluster,
                 str(dst_dev.ieee),
                 dst_epid,
+                dst_addr,
             )
             res = await u.retry_wrapper(
                 zdo.request,
@@ -363,7 +367,11 @@ async def bind_ieee(
         for ep_id, ep in dst_dev.endpoints.items():
             if ep_id == 0:
                 continue
-            if isCoordinatorTarget or (src_in_cluster in ep.out_clusters):
+            if (
+                isCoordinatorTarget
+                or (src_in_cluster in ep.out_clusters)
+                and (u_dst_epid is None or u_dst_epid == ep_id)
+            ):
                 dst_epid = ep_id
                 break
         if not dst_epid:
@@ -372,13 +380,15 @@ async def bind_ieee(
 
         for src_ep in src_endpoints:
             LOGGER.debug(
-                "0x%04X: binding %s/EP:%s, in-cluster: 0x%04X to %s/EP:%s",
+                "0x%04X: binding %s/EP:%s, in-cluster: 0x%04X to %s/EP:%s"
+                " (%r)",
                 src_dev.nwk,
                 str(src_dev.ieee),
                 src_ep,
                 src_in_cluster,
                 str(dst_dev.ieee),
                 dst_epid,
+                dst_addr,
             )
             if src_ep not in results:
                 results[src_ep] = {}
@@ -612,7 +622,7 @@ async def binds_get(
                 if binding.DstAddress.addrmode == 1:
                     dst_info = {
                         "addrmode": binding.DstAddress.addrmode,
-                        "group": f"0x{binding.DstAddress.nwk}",
+                        "group": f"0x{binding.DstAddress.nwk:04X}",
                     }
                 elif binding.DstAddress.addrmode == 3:
                     dst_info = {
