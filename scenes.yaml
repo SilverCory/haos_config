@@ -219,3 +219,18 @@
       state: 'on'
   metadata: {}
   icon: mdi:magnify-expand
+- id: '1736100273742'
+  name: Back Garden Lights See
+  entities:
+    switch.back_light_coordinator_switch:
+      device_class: switch
+      icon: mdi:wall-sconce-outline
+      friendly_name: Back Garden Light Coordinator Wall
+      state: 'on'
+    switch.back_light_coordinator_switch_2:
+      device_class: switch
+      icon: mdi:floor-lamp-torchiere-outline
+      friendly_name: Back Garden Light Coordinator Standing
+      state: 'on'
+  metadata: {}
+  icon: mdi:eye-check
