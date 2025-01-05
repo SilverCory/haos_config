@@ -196,7 +196,7 @@
       device_class: switch
       icon: mdi:wall-sconce-outline
       friendly_name: Back Garden Light Coordinator Wall
-      state: 'off'
+      state: 'on'
     switch.back_light_coordinator_switch_2:
       device_class: switch
       icon: mdi:floor-lamp-torchiere-outline
