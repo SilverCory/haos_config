@@ -189,3 +189,18 @@
       state: 'off'
   icon: mdi:account-group
   metadata: {}
+- id: '1736100171099'
+  name: Back Garden Lights Ambience
+  entities:
+    switch.back_light_coordinator_switch:
+      device_class: switch
+      icon: mdi:wall-sconce-outline
+      friendly_name: Back Garden Light Coordinator Wall
+      state: 'off'
+    switch.back_light_coordinator_switch_2:
+      device_class: switch
+      icon: mdi:floor-lamp-torchiere-outline
+      friendly_name: Back Garden Light Coordinator Standing
+      state: 'on'
+  metadata: {}
+  icon: mdi:snowflake
