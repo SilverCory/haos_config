@@ -249,12 +249,11 @@
     path: silvercory/light_coordinator.yaml
     input:
       switchList:
-      - switch.back_light_coordinator_switch
-      - switch.back_light_coordinator_switch_2
+      - switch.front_garden_light_coordinator_switch_2
       off_duration:
-        hours: 2
+        hours: 0
         minutes: 0
-        seconds: 0
+        seconds: 10
 - id: '1730471734076'
   alias: Back Garden Switch State Reset Back
   description: ''
