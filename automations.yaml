@@ -251,9 +251,9 @@
       switchList:
       - switch.front_garden_light_coordinator_switch_2
       off_duration:
-        hours: 0
+        hours: 2
         minutes: 0
-        seconds: 10
+        seconds: 0
 - id: '1730471734076'
   alias: Back Garden Switch State Reset Back
   description: ''
