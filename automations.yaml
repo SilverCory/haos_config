@@ -364,7 +364,7 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 5
+      seconds: 2
   conditions:
   - condition: numeric_state
     entity_id: sensor.presence_sensor_fp2_dccc_light_sensor_light_level
