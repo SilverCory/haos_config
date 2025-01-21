@@ -451,7 +451,7 @@
         message: TTS
         title: Garage Door Open
         data:
-          tts_text: The garage door is now closed
+          tts_text: Pee pee poo poo
           media_stream: alarm_stream
           tag: garage-door-open-state
           persistent: true
