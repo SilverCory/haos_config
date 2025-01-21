@@ -424,7 +424,7 @@
       metadata: {}
       data:
         message: The garage door is open
-        title: Garage Door
+        title: Garage Door Open
         data:
           tag: garage-door-open-state
           persistent: true
@@ -438,7 +438,7 @@
       metadata: {}
       data:
         message: clear_notification
-        title: Garage Door
+        title: Garage Door Open
         data:
           tag: garage-door-open-state
           persistent: true
