@@ -427,7 +427,7 @@
         title: Garage Door
         data:
           tag: garage-door-open-state
-          sticky: 'true'
+          persistent: true
   - if:
     - condition: state
       entity_id: binary_sensor.garage_door_sensor_opening
@@ -440,5 +440,5 @@
         title: Garage Door
         data:
           tag: garage-door-open-state
-          sticky: 'true'
+          persistent: true
   mode: single
