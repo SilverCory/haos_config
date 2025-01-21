@@ -406,3 +406,36 @@
       - light.cory_s_room_big_light
       min_color_temp: 6000
       max_color_temp: 1500
+- id: '1737481337939'
+  alias: New automation
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.garage_door_sensor_opening
+  conditions: []
+  actions:
+  - repeat:
+      count: 18
+      sequence:
+      - if:
+        - condition: state
+          entity_id: binary_sensor.garage_door_sensor_opening
+          state: 'on'
+        then:
+        - action: persistent_notification.create
+          metadata: {}
+          data:
+            message: The garage door is open
+            title: Garage Door
+            notification_id: garage_door_open_notif_111
+        else:
+        - action: persistent_notification.dismiss
+          metadata: {}
+          data:
+            notification_id: garage_door_open_notif_111
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 10
+  mode: single
