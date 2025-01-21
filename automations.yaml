@@ -426,6 +426,7 @@
         message: The garage door is open
         title: Garage Door Open
         data:
+          vibrationPattern: 100, 1000, 100, 1000, 100
           tag: garage-door-open-state
           persistent: true
           sticky: true
