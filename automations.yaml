@@ -445,16 +445,4 @@
           persistent: true
           sticky: true
           visibility: public
-    - action: notify.notify
-      metadata: {}
-      data:
-        message: TTS
-        title: Garage Door Open
-        data:
-          tts_text: Pee pee poo poo
-          media_stream: alarm_stream
-          tag: garage-door-open-state
-          persistent: true
-          sticky: true
-          visibility: public
   mode: single
