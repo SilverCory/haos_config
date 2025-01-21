@@ -407,7 +407,7 @@
       min_color_temp: 6000
       max_color_temp: 1500
 - id: '1737481647381'
-  alias: Garage Door Open notifications
+  alias: Garage Door Notifications
   description: ''
   triggers:
   - trigger: state
