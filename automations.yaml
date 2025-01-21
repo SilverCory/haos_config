@@ -429,6 +429,7 @@
           tag: garage-door-open-state
           persistent: true
           sticky: true
+          visibility: public
   - if:
     - condition: state
       entity_id: binary_sensor.garage_door_sensor_opening
@@ -443,4 +444,17 @@
           tag: garage-door-open-state
           persistent: true
           sticky: true
+          visibility: public
+    - action: notify.notify
+      metadata: {}
+      data:
+        message: TTS
+        title: Garage Door Open
+        data:
+          tts_text: The garage door is now closed
+          media_stream: alarm_stream
+          tag: garage-door-open-state
+          persistent: true
+          sticky: true
+          visibility: public
   mode: single
