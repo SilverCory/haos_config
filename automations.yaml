@@ -425,6 +425,9 @@
       data:
         message: The garage door is open
         title: Garage Door
+        data:
+          tag: garage-door-open-state
+          sticky: 'true'
   - if:
     - condition: state
       entity_id: binary_sensor.garage_door_sensor_opening
@@ -433,6 +436,9 @@
     - action: notify.notify
       metadata: {}
       data:
-        message: The garage door is closed
+        message: clear_notification
         title: Garage Door
+        data:
+          tag: garage-door-open-state
+          sticky: 'true'
   mode: single
