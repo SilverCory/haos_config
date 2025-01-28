@@ -28,6 +28,9 @@ wifi:
     ssid: "Cupboard-Lock Fallback Hotspot"
     password: "S5sIRG3PyVA9"
 
+web_server:
+ port: 80
+
 captive_portal:
 
 substitutions:
