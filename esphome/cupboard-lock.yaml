@@ -60,15 +60,17 @@ output:
 
 button:
   - platform: output
+    name: 'Unlock Double Door'
     id: 'lock_a_button'
     output: lock_a
     duration: ${door_lock_pulse_time}
-    internal: True
+    internal: False
   - platform: output
+    name: 'Unlock Single Door'
     id: 'lock_b_button'
     output: lock_b
     duration: ${door_lock_pulse_time}
-    internal: True
+    internal: False
 
 lock:
   - platform: template
@@ -79,8 +81,7 @@ lock:
       } else {
         return LOCK_STATE_UNLOCKED;
       }
-    open_action:
-      - button.press: lock_a_button
+    open_action: []
     lock_action: []
     unlock_action: []
   - platform: template
@@ -91,8 +92,7 @@ lock:
       } else {
         return LOCK_STATE_UNLOCKED;
       }
-    open_action:
-      - button.press: lock_b_button
+    open_action: []
     lock_action: []
     unlock_action: []
         
