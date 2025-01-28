@@ -52,7 +52,7 @@ binary_sensor:
     device_class: opening  # Indicates if door is closed
     internal: True
   - platform: esp32_touch
-    name: "ESP32 Touch Pad"
+    name: "Secret Touch Open"
     pin: GPIO2
     threshold: 1000
     on_double_click: 
