@@ -44,10 +44,26 @@ output:
     pin: GPIO16
     id: 'lock_b'
 
+button:
+  - platform: output
+    id: 'lock_a_button'
+    output: lock_a
+    duration: 150ms
+    internal: True
+  - platform: output
+    id: 'lock_b_button'
+    output: lock_b
+    duration: 150ms
+    internal: True
+
 lock:
-  - platform: output
+  - platform: template
     name: "Double Door Lock"
-    output: 'lock_a'
-  - platform: output
+    optimistic: True
+    open_action:
+      - button.press: lock_a_button
+  - platform: template
     name: "Single Door Lock"
-    output: 'lock_b'
+    optimistic: True
+    open_action:
+      - button.press: lock_b_button
