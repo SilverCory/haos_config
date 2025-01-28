@@ -36,6 +36,20 @@ captive_portal:
 substitutions:
   door_lock_pulse_time: '200ms'
 
+binary_sensor:
+  - platform: gpio
+    pin: GPIO4
+    id: door_closed_a
+    name: "Door Closed Switch A"
+    device_class: opening  # Indicates if door is closed
+    internal: True
+  - platform: gpio
+    pin: GPIO5
+    id: door_closed_b
+    name: "Door Closed Switch B"
+    device_class: opening  # Indicates if door is closed
+    internal: True
+
 output:
   - platform: gpio
     pin: GPIO17
@@ -48,24 +62,35 @@ button:
   - platform: output
     id: 'lock_a_button'
     output: lock_a
-    duration: 150ms
+    duration: ${door_lock_pulse_time}
     internal: True
   - platform: output
     id: 'lock_b_button'
     output: lock_b
-    duration: 150ms
+    duration: ${door_lock_pulse_time}
     internal: True
 
 lock:
   - platform: template
     name: "Double Door Lock"
-    optimistic: True
+    lambda: |-
+      if (id(door_closed_a).state) {
+        return LOCK_STATE_LOCKED;
+      } else {
+        return LOCK_STATE_UNLOCKED;
+      }
     open_action:
       - button.press: lock_a_button
     lock_action: []
     unlock_action: []
   - platform: template
     name: "Single Door Lock"
+    lambda: |-
+      if (id(door_closed_b).state) {
+        return LOCK_STATE_LOCKED;
+      } else {
+        return LOCK_STATE_UNLOCKED;
+      }
     open_action:
       - button.press: lock_b_button
     lock_action: []
