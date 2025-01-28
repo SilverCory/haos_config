@@ -29,4 +29,22 @@ wifi:
     password: "S5sIRG3PyVA9"
 
 captive_portal:
-    
+
+substitutions:
+  door_lock_pulse_time: '200ms'
+
+output:
+  - platform: gpio
+    pin: GPIO17
+    id: 'lock_a'
+  - platform: gpio
+    pin: GPIO16
+    id: 'lock_b'
+
+lock:
+  - platform: output
+    name: "Double Door Lock"
+    output: 'lock_a'
+  - platform: output
+    name: "Single Door Lock"
+    output: 'lock_b'
