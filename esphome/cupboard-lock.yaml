@@ -62,8 +62,12 @@ lock:
     optimistic: True
     open_action:
       - button.press: lock_a_button
+    lock_action: []
+    unlock_action: []
   - platform: template
     name: "Single Door Lock"
-    optimistic: True
     open_action:
       - button.press: lock_b_button
+    lock_action: []
+    unlock_action: []
+        
