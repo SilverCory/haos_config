@@ -36,6 +36,8 @@ captive_portal:
 substitutions:
   door_lock_pulse_time: '200ms'
 
+esp32_touch:
+
 binary_sensor:
   - platform: gpio
     pin: GPIO4
@@ -49,6 +51,14 @@ binary_sensor:
     name: "Door Closed Switch B"
     device_class: opening  # Indicates if door is closed
     internal: True
+  - platform: esp32_touch
+    name: "ESP32 Touch Pad"
+    pin: GPIO2
+    threshold: 1000
+    on_double_click: 
+      then:
+        - button.press: lock_a_button
+        - button.press: lock_b_button
 
 output:
   - platform: gpio
