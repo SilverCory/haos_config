@@ -37,21 +37,21 @@ substitutions:
   door_lock_pulse_time: '200ms'
 
 esp32_touch:
-  setup_mode: True
+  setup_mode: False
 
 binary_sensor:
   - platform: gpio
     pin: GPIO4
     id: door_closed_a
     name: "Door Closed Switch A"
-    device_class: opening  # Indicates if door is closed
-    internal: True
+    device_class: lock  # Indicates if door is closed
+    internal: False
   - platform: gpio
     pin: GPIO5
     id: door_closed_b
     name: "Door Closed Switch B"
-    device_class: opening  # Indicates if door is closed
-    internal: True
+    device_class: lock  # Indicates if door is closed
+    internal: False
   - platform: esp32_touch
     name: "Secret Touch Open"
     pin: GPIO2
@@ -83,27 +83,27 @@ button:
     duration: ${door_lock_pulse_time}
     internal: False
 
-lock:
-  - platform: template
-    name: "Double Door Lock"
-    lambda: |-
-      if (id(door_closed_a).state) {
-        return LOCK_STATE_LOCKED;
-      } else {
-        return LOCK_STATE_UNLOCKED;
-      }
-    open_action: []
-    lock_action: []
-    unlock_action: []
-  - platform: template
-    name: "Single Door Lock"
-    lambda: |-
-      if (id(door_closed_b).state) {
-        return LOCK_STATE_LOCKED;
-      } else {
-        return LOCK_STATE_UNLOCKED;
-      }
-    open_action: []
-    lock_action: []
-    unlock_action: []
+# lock:
+#   - platform: template
+#     name: "Double Door Lock"
+#     lambda: |-
+#       if (id(door_closed_a).state) {
+#         return LOCK_STATE_LOCKED;
+#       } else {
+#         return LOCK_STATE_UNLOCKED;
+#       }
+#     open_action: []
+#     lock_action: []
+#     unlock_action: []
+#   - platform: template
+#     name: "Single Door Lock"
+#     lambda: |-
+#       if (id(door_closed_b).state) {
+#         return LOCK_STATE_LOCKED;
+#       } else {
+#         return LOCK_STATE_UNLOCKED;
+#       }
+#     open_action: []
+#     lock_action: []
+#     unlock_action: []
         
