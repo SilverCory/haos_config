@@ -37,6 +37,7 @@ substitutions:
   door_lock_pulse_time: '200ms'
 
 esp32_touch:
+  setup_mode: True
 
 binary_sensor:
   - platform: gpio
