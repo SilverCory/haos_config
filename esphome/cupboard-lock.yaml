@@ -41,13 +41,17 @@ esp32_touch:
 
 binary_sensor:
   - platform: gpio
-    pin: GPIO4
+    pin: 
+      number: GPIO4
+      inverted: True
     id: door_closed_double
     name: "Double Door"
     device_class: lock  # Indicates if door is closed
     internal: False
   - platform: gpio
-    pin: GPIO5
+    pin: 
+      number: GPIO5
+      inverted: True
     id: door_closed_single
     name: "Single Door"
     device_class: lock  # Indicates if door is closed
