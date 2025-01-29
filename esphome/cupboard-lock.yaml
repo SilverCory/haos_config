@@ -55,7 +55,7 @@ binary_sensor:
   - platform: esp32_touch
     name: "Secret Touch Open"
     pin: GPIO2
-    threshold: 1000
+    threshold: 500
     on_double_click: 
       then:
         - button.press: lock_a_button
