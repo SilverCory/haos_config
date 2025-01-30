@@ -60,6 +60,7 @@ binary_sensor:
     name: "Secret Touch Open"
     pin: GPIO2
     threshold: 500
+    internal: True
     on_double_click: 
       then:
         - button.press: lock_double_button
