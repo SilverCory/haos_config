@@ -34,7 +34,7 @@ web_server:
 captive_portal:
 
 substitutions:
-  door_lock_pulse_time: '200ms'
+  door_lock_pulse_time: '300ms'
 
 esp32_touch:
   setup_mode: False
