@@ -6,6 +6,9 @@ detectors:
     type: edgetpu
     device: usb
 
+ffmpeg:
+  hwaccel_args: preset-vaapi
+
 cameras:
   back_door: # <------ Name the camera
     enabled: true
