@@ -7,10 +7,10 @@ detectors:
     device: usb
 
 ffmpeg:
-  hwaccel_args: preset-vaapi
+  hwaccel_args: preset-libmfx
 
 cameras:
-  back_door: # <------ Name the camera
+  back_door:
     enabled: true
     ffmpeg:
       inputs:
@@ -18,7 +18,7 @@ cameras:
           roles:
             - detect
     detect:
-      enabled: true # <---- disable detection until you have a working camera feed
+      enabled: true
       width: 1280
       height: 720
 
