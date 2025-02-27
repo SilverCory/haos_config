@@ -2,12 +2,17 @@
 mqtt:
   enabled: False
 
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+
 cameras:
-  name_of_your_camera: # <------ Name the camera
+  back_door: # <------ Name the camera
     enabled: True
     ffmpeg:
       inputs:
-        - path: rtsp://10.0.10.10:554/rtsp # <----- The stream you want to use for detection
+        - path: 'rtsps://192.168.1.212:7441/IKaf72QSI3G17ptF?enableSrtp'
           roles:
             - detect
     detect:
