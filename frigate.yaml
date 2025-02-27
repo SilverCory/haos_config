@@ -6,8 +6,8 @@ detectors:
     type: edgetpu
     device: usb
 
-ffmpeg:
-  hwaccel_args: preset-libmfx
+# ffmpeg:
+#   hwaccel_args: preset-libmfx
 
 cameras:
   back_door:
