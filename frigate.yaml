@@ -1,6 +1,5 @@
-
 mqtt:
-  enabled: False
+  enabled: false
 
 detectors:
   coral:
@@ -9,13 +8,14 @@ detectors:
 
 cameras:
   back_door: # <------ Name the camera
-    enabled: True
+    enabled: true
     ffmpeg:
       inputs:
-        - path: 'rtsps://192.168.1.212:7441/IKaf72QSI3G17ptF?enableSrtp'
+        - path: rtsps://192.168.1.212:7441/IKaf72QSI3G17ptF?enableSrtp
           roles:
             - detect
     detect:
-      enabled: False # <---- disable detection until you have a working camera feed
+      enabled: false # <---- disable detection until you have a working camera feed
       width: 1280
       height: 720
+version: 0.15-1
