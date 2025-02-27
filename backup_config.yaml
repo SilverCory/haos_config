@@ -1,0 +1,21 @@
+
+mqtt:
+  enabled: False
+
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+
+cameras:
+  back_door: # <------ Name the camera
+    enabled: True
+    ffmpeg:
+      inputs:
+        - path: 'rtsps://192.168.1.212:7441/IKaf72QSI3G17ptF?enableSrtp'
+          roles:
+            - detect
+    detect:
+      enabled: False # <---- disable detection until you have a working camera feed
+      width: 1280
+      height: 720
