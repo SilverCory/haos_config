@@ -1,0 +1,109 @@
+substitutions:
+  name: esphome-corys-light
+  friendly_name: ESPHome Corys Room Light
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2024.6.0
+  name_add_mac_suffix: false
+  project:
+    name: esphome.web
+    version: dev
+
+esp8266:
+  board: esp01_1m
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+# Allow Over-The-Air updates
+ota:
+- platform: esphome
+
+# Allow provisioning Wi-Fi via serial
+improv_serial:
+
+wifi:
+  # Set up a wifi access point
+  ap: {}
+
+# In combination with the `ap` this allows the user
+# to provision wifi credentials to the device via WiFi AP.
+captive_portal:
+
+dashboard_import:
+  package_import_url: github://esphome/example-configs/esphome-web/esp8266.yaml@main
+  import_full_config: true
+
+# To have a "next url" for improv serial
+web_server:
+
+output:
+  - platform: esp8266_pwm
+    id: output_r
+    pin: GPIO4
+  - platform: esp8266_pwm
+    id: output_cw
+    pin: GPIO5
+  - platform: esp8266_pwm
+    pin: GPIO12
+    id: output_g
+  - platform: esp8266_pwm
+    pin: GPIO13
+    id: output_ww
+  - platform: esp8266_pwm
+    pin: GPIO14
+    id: output_b
+
+time:
+  - platform: homeassistant
+    id: my_time
+
+# This component provides sun information
+sun:
+  id: sun_home
+  latitude: !secret home_lat
+  longitude: !secret home_long
+
+light:
+  - platform: rgbww
+    id: light_1
+    color_interlock: true
+    name: ${friendly_name}
+    red: output_r
+    green: output_g
+    blue: output_b
+    warm_white: output_ww
+    cold_white: output_cw
+    cold_white_color_temperature: 5700 K
+    warm_white_color_temperature: 3000 K
+    gamma_correct: true
+    effects:
+      - lambda:
+          name: "Sun Sync"  # Give the effect a descriptive name
+          update_interval: 60s
+          lambda: |-
+            auto elevation = id(sun_home).elevation();
+            auto call = id(light_1).turn_on();
+
+            // Calculate brightness
+            double brightness_low = 0.2;   // For low elevation
+            double brightness_high = 1.0;  // For high elevation
+            double elevation_low = 0;      // Elevation for brightness_low
+            double elevation_high = 45;    // Elevation for brightness_high
+            double brightness = brightness_low + (elevation - elevation_low) * (brightness_high - brightness_low) / (elevation_high - elevation_low);
+
+            // Calculate color temperature
+            double color_temp_low = 2700;  // For low elevation
+            double color_temp_high = 6500; // For high elevation
+            double color_temp = color_temp_low + (elevation - elevation_low) * (color_temp_high - color_temp_low) / (elevation_high - elevation_low);
+
+            // Set brightness and color temperature with transition
+            call.set_brightness(brightness);
+            call.set_color_temperature(color_temp);
+            call.set_transition_length(60000);  // Smooth transition over 10 seconds
+            call.perform();
