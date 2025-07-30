@@ -6,16 +6,16 @@
         "abort": {
             "already_configured": "Account is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "cannot_connect": "Failed to connect",
-            "invalid_access_token": "Invalid access token",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "missing_credentials": "The integration requires application credentials.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
             "oauth_error": "Received invalid token data.",
             "oauth_failed": "Error while obtaining access token.",
             "oauth_timeout": "Timeout resolving OAuth token.",
             "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
             "reauth_successful": "Re-authentication was successful",
-            "timeout_connect": "Timeout establishing connection",
-            "unknown": "Unexpected error"
+            "user_rejected_authorize": "Account linking rejected: {error}"
         },
         "create_entry": {
             "default": "Successfully authenticated"
@@ -33,14 +33,17 @@
             }
         }
     },
+    "exceptions": {
+        "grpc_error": {
+            "message": "Failed to communicate with Google Assistant"
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "enable_conversation_agent": "Enable the conversation agent",
                     "language_code": "Language code"
-                },
-                "description": "Set language for interactions with Google Assistant and whether you want to enable the conversation agent."
+                }
             }
         }
     },
