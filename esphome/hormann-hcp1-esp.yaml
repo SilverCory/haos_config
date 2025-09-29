@@ -5,8 +5,7 @@ esphome:
   #   - hormann.cpp
   
 external_components:
-  - source:
-      path: components
+  - source: components
 
 esp32:
   board: nodemcu-32s
