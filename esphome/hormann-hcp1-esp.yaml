@@ -1,8 +1,8 @@
 esphome:
   name: hormann_hcp1_esp
-  includes:
-    - hoermann.h
-    - hoermann.cpp
+  # includes:
+  #   - hormann.h
+  #   - hormann.cpp
 
 esp32:
   board: nodemcu-32s
