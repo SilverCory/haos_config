@@ -3,6 +3,10 @@ esphome:
   # includes:
   #   - hormann.h
   #   - hormann.cpp
+  
+external_components:
+  - source:
+      path: components
 
 esp32:
   board: nodemcu-32s
