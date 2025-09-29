@@ -1,0 +1,190 @@
+esphome:
+  name: hormann_hcp1_esp
+  includes:
+    - hoermann.h
+    - hoermann.cpp
+
+esp32:
+  board: nodemcu-32s
+
+# wifi:
+#   ssid: !secret wifi_ssid
+#   password: !secret wifi_password
+
+logger:
+  level: DEBUG
+
+# api:
+#   password: !secret api_password
+
+ota:
+
+uart:
+  id: uart_bus
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 19200
+  stop_bits: 1
+  data_bits: 8
+  parity: NONE
+  rs485:
+    de_pin: GPIO18   # connect to DE/RE on RS485 transceiver
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+# bme280:
+#   address: 0x76
+#   temperature:
+#     name: "Garage Temperature"
+#   pressure:
+#     name: "Garage Pressure"
+#   humidity:
+#     name: "Garage Humidity"
+
+globals:
+  - id: hoermann_component
+    type: HoermannComponent*
+    restore_value: no
+
+# Custom cover that uses the HoermannComponent
+cover:
+  - platform: template
+    name: "Garage Door"
+    id: garage_cover
+    optimistic: true
+    open_action:
+      - lambda: |-
+          if (id(hoermann_component) != nullptr) {
+            id(hoermann_component)->trigger_action(hoermann_action_open);
+          }
+    close_action:
+      - lambda: |-
+          if (id(hoermann_component) != nullptr) {
+            id(hoermann_component)->trigger_action(hoermann_action_close);
+          }
+    stop_action:
+      - lambda: |-
+          if (id(hoermann_component) != nullptr) {
+            id(hoermann_component)->trigger_action(hoermann_action_stop);
+          }
+
+# Template switches exposing light/venting/emergency/impulse actions
+switch:
+  - platform: template
+    name: "Garage Venting"
+    turn_on_action:
+      - lambda: |-
+          if (id(hoermann_component) != nullptr) {
+            id(hoermann_component)->trigger_action(hoermann_action_venting);
+          }
+
+  - platform: template
+    name: "Garage Light Toggle"
+    turn_on_action:
+      - lambda: |-
+          if (id(hoermann_component) != nullptr) {
+            id(hoermann_component)->trigger_action(hoermann_action_toggle_light);
+          }
+
+  - platform: template
+    name: "Garage Emergency Stop"
+    turn_on_action:
+      - lambda: |-
+          if (id(hoermann_component) != nullptr) {
+            id(hoermann_component)->trigger_action(hoermann_action_emergency_stop);
+          }
+
+  - platform: template
+    name: "Garage Impulse"
+    turn_on_action:
+      - lambda: |-
+          if (id(hoermann_component) != nullptr) {
+            id(hoermann_component)->trigger_action(hoermann_action_impulse);
+          }
+
+# Sensors publishing parsed states from the bus (template sensors pull from component)
+sensor:
+  - platform: template
+    name: "Garage Broadcast Raw"
+    lambda: |-
+      if (id(hoermann_component) != nullptr) {
+        return (float) id(hoermann_component)->get_state().data_valid ? (float)0 : (float)0;
+      }
+    update_interval: 5s
+    # Note: the raw broadcast value isn't published as a float directly here.
+    # We'll expose individual boolean sensors below for clarity.
+
+binary_sensor:
+  - platform: template
+    name: "Garage Door Error"
+    lambda: |-
+      if (id(hoermann_component) != nullptr) {
+        return id(hoermann_component)->get_state().error;
+      }
+      return false;
+    update_interval: 1s
+
+  - platform: template
+    name: "Garage Door Venting State"
+    lambda: |-
+      if (id(hoermann_component) != nullptr) {
+        return id(hoermann_component)->get_state().venting;
+      }
+      return false;
+    update_interval: 1s
+
+  - platform: template
+    name: "Garage Door Light State"
+    lambda: |-
+      if (id(hoermann_component) != nullptr) {
+        return id(hoermann_component)->get_state().light;
+      }
+      return false;
+    update_interval: 1s
+
+  - platform: template
+    name: "Garage Door Prewarn"
+    lambda: |-
+      if (id(hoermann_component) != nullptr) {
+        return id(hoermann_component)->get_state().prewarn;
+      }
+      return false;
+    update_interval: 1s
+
+  - platform: template
+    name: "Garage Door Option Relay"
+    lambda: |-
+      if (id(hoermann_component) != nullptr) {
+        return id(hoermann_component)->get_state().option_relay;
+      }
+      return false;
+    update_interval: 1s
+
+  - platform: template
+    name: "Garage Door Open"
+    lambda: |-
+      if (id(hoermann_component) != nullptr) {
+        return id(hoermann_component)->get_state().cover == cover_open;
+      }
+      return false;
+    update_interval: 1s
+
+  - platform: template
+    name: "Garage Door Closed"
+    lambda: |-
+      if (id(hoermann_component) != nullptr) {
+        return id(hoermann_component)->get_state().cover == cover_closed;
+      }
+      return false;
+    update_interval: 1s
+
+# Register component in YAML
+custom_component:
+  - lambda: |-
+      auto comp = new HoermannComponent(id(uart_bus));
+      App.register_component(comp);
+      id(hoermann_component) = comp;
+      return {comp};
