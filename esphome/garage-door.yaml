@@ -1,0 +1,32 @@
+esphome:
+  name: garage-door
+  friendly_name: garage-door
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "lmt7gnB3IymH0fxTdT77I0zfx699KlFFZ/EiqC8etEA="
+
+ota:
+  - platform: esphome
+    password: "05b1249714967696c9a56c413388347e"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Garage-Door Fallback Hotspot"
+    password: "EYLAu53ckK24"
+
+captive_portal:
+    
