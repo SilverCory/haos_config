@@ -28,6 +28,9 @@ wifi:
     ssid: "Garage-Door Fallback Hotspot"
     password: "TZ86GYtFOuIx"
 
+web_server:
+ port: 80
+
 captive_portal:
 
 external_components:
