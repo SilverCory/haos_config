@@ -31,7 +31,7 @@ wifi:
 captive_portal:
 
 external_components:
-  - source: 'github://SilverCory/esphome-components@982e11caa87720912f69f1a8dea9dea1809fa7f0'
+  - source: 'github://SilverCory/esphome-components@207217bd8c214c54f884671211276a2cf8e3dce6'
 
 uart:
   id: uart_bus
