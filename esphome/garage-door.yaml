@@ -34,7 +34,7 @@ web_server:
 captive_portal:
 
 external_components:
-  - source: 'github://SilverCory/esphome-components@3f745f095a182d5f42622cc09008c08fe85874ec'
+  - source: 'github://SilverCory/esphome-components@ae471aab90a7fede63854667a0a855fc1b375073'
 
 uart:
   id: uart_bus
