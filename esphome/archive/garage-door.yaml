@@ -13,11 +13,11 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "1ztq6x+rvyc1yLtVNsXy/luhK3HTdsT6jXIKaikk8is="
+    key: "S8B3e7s/hT6g5XU3K0gtNdcvZmhQ1uwu9oXyrhZymBI="
 
 ota:
   - platform: esphome
-    password: "bd0608cc74ec824884ecfcfa7e25d24d"
+    password: "931655516a1f900650d22a36012657df"
 
 wifi:
   ssid: !secret wifi_ssid
@@ -26,7 +26,7 @@ wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Garage-Door Fallback Hotspot"
-    password: "YTjtjMeN0wTK"
+    password: "N9U4uLo0ChYD"
 
 captive_portal:
     
