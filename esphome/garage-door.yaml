@@ -88,6 +88,12 @@ binary_sensor:
     name: "${friendly_name} Option Relay"
     device_class: power
 
+  - platform: hoermann_controller
+    hoermann_controller_id: hoermann_door_controller
+    type: connected
+    name: "${friendly_name} Connected"
+    device_class: connectivity
+
 button:
   - platform: hoermann_controller
     hoermann_controller_id: hoermann_door_controller
