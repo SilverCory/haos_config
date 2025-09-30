@@ -2,6 +2,9 @@ esphome:
   name: garage-door
   friendly_name: garage-door
 
+substitutions:
+  friendly_name: "Garage Door"
+
 esp32:
   board: esp32dev
   framework:
