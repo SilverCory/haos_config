@@ -446,3 +446,50 @@
           sticky: true
           visibility: public
   mode: single
+- id: '1760452053087'
+  alias: HA Zigbee Recovery
+  description: ''
+  triggers:
+  - device_id: 9a012a31b27f5dc646bccef3b4313a9f
+    domain: zha
+    type: device_offline
+    subtype: device_offline
+    trigger: device
+  conditions: []
+  actions:
+  - device_id: 7a2d5c39cfe12a1afe325a40e0c4b3f4
+    domain: button
+    entity_id: 5cef3a3c9de75eb092104d8f66241307
+    type: press
+  - device_id: 7a2d5c39cfe12a1afe325a40e0c4b3f4
+    domain: button
+    entity_id: b58ec52099b14d9672fdf974a14210f5
+    type: press
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+  - action: homeassistant.reload_config_entry
+    metadata: {}
+    data:
+      entry_id: 01JAQN30KAKEM2P2EFJVQ4WZN2
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+  - device_id: e7bb0768b108c16e34a1a43644e41fe5
+    domain: button
+    entity_id: 31b3a0cd3cb9ddf5ae5a17e3a4ec30ee
+    type: press
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+  - action: homeassistant.reload_config_entry
+    metadata: {}
+    data:
+      entry_id: 01JAQN30KAKEM2P2EFJVQ4WZN2
+  mode: single
