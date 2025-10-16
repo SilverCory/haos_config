@@ -38,8 +38,7 @@ remote_receiver:
   dump: all
 
 remote_transmitter:
-  id: rc_switch_raw
-  pin: GPIO4
+  pin: 4
   carrier_duty_percent: 100%
 
 button:
