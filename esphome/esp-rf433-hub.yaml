@@ -32,4 +32,11 @@ web_server:
  port: 80
 
 captive_portal:
-    
+
+remote_receiver:
+  pin: GPIO0
+  dump: all
+
+remote_transmitter:
+  pin: GPIO4
+  carrier_duty_percent: 100%
