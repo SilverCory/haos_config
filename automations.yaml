@@ -493,3 +493,17 @@
     data:
       entry_id: 01JAQN30KAKEM2P2EFJVQ4WZN2
   mode: single
+- id: '1760648577233'
+  alias: Doorbell Chime (Backup)
+  description: Links the Unifi Doorbell to the RF433 doorbell
+  triggers:
+  - trigger: state
+    entity_id:
+    - event.front_garden_doorbell_doorbell
+  conditions: []
+  actions:
+  - device_id: 8d560188afeac61248c66c843b35dd7d
+    domain: button
+    entity_id: 658892530830aa461d621f5560e9fa93
+    type: press
+  mode: single
