@@ -44,7 +44,7 @@ remote_transmitter:
 button:
   - platform: template
     name: Doorbell Chime Ring
-    icon: mdi:icon-bell
+    icon: mdi:bell-ring
     on_press:
       - remote_transmitter.transmit_rc_switch_raw:
           code: '101111000110001101000011'
