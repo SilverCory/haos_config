@@ -1,0 +1,32 @@
+esphome:
+  name: rf433-hub
+  friendly_name: rf433-hub
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "2Pfr+lQDngUYVlx4MDjCUFM0N4Wy3PSh8kmdaroGavs="
+
+ota:
+  - platform: esphome
+    password: "410f267f3d3474cb18dd897028bd689a"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Rf433-Hub Fallback Hotspot"
+    password: "Qr2ynOHQ4e8w"
+
+captive_portal:
+    
