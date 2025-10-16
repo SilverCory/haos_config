@@ -38,5 +38,17 @@ remote_receiver:
   dump: all
 
 remote_transmitter:
+  id: rc_switch_raw
   pin: GPIO4
   carrier_duty_percent: 100%
+
+button:
+  - platform: template
+    name: Doorbell Chime Ring
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          code: '101111000110001101000011'
+          protocol: 1
+          repeat:
+            times: 10
+            wait_time: 0s
