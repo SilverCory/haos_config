@@ -28,5 +28,8 @@ wifi:
     ssid: "Esp-Rf433-Hub Fallback Hotspot"
     password: "jfykVNNuoyxv"
 
+web_server:
+ port: 80
+
 captive_portal:
     
