@@ -41,15 +41,50 @@ remote_transmitter:
   pin: 4
   carrier_duty_percent: 100%
 
+# 1. Define a global binary sensor to act as the "Trigger Lock"
+# This entity will NOT show up in Home Assistant because of internal: true.
+# ON = Ringing, OFF = Ready to Ring.
+switch:
+  - platform: template
+    name: "Doorbell Ring Lock"
+    id: doorbell_lock
+    internal: true
+    optimistic: true
+
+# 2. Your Existing Template Button, modified with the rate-limit logic
 button:
   - platform: template
     name: Doorbell Chime Ring
     icon: mdi:bell-ring
+    id: doorbell_chime_button
     on_press:
-      - remote_transmitter.transmit_rc_switch_raw:
-          code: '101111000110001101000011'
-          protocol: 
-            pulse_length: 185
-          repeat:
-            times: 10
-            wait_time: 0s
+      # Use an IF condition to check the state of the lock
+      - if:
+          condition:
+            # ONLY execute if the lock is OFF (ready to ring)
+            switch.is_off: doorbell_lock
+          then:
+            # --- START RINGING SEQUENCE ---
+            
+            # Action 1: Immediately turn the lock ON to block further triggers
+            - switch.turn_on: doorbell_lock
+            
+            # Action 2: Transmit the RF code (your original action)
+            - remote_transmitter.transmit_rc_switch_raw:
+                code: '101111000110001101000011'
+                protocol: 
+                  pulse_length: 185
+                repeat:
+                  times: 10
+                  wait_time: 0s
+            
+            # Action 3: Log that the chime was triggered
+            - logger.log: "Doorbell Chime Triggered. Lock active for 10s."
+
+            # Action 4: Wait for 10 seconds
+            - delay: 10s
+            
+            # Action 5: Turn the lock OFF, making the button available again
+            - switch.turn_off: doorbell_lock
+            
+            # --- END RINGING SEQUENCE ---
