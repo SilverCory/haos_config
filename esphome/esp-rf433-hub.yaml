@@ -50,6 +50,11 @@ switch:
     id: doorbell_lock
     internal: true
     optimistic: true
+    on_turn_on: 
+      then:
+        - delay: 
+            10s
+        - switch.turn_off: doorbell_lock
 
 # 2. Your Existing Template Button, modified with the rate-limit logic
 button:
