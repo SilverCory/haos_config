@@ -27,6 +27,26 @@ google_assistant:
     - light
     - scene
     - camera
+    - alarm_control_panel
+    - button
+    - climate
+    - cover
+    - event
+    - fan
+    - group
+    - humidifier
+    - input_boolean
+    - input_button
+    - input_select
+    - lawn_mower
+    - lock
+    - media_player
+    - script
+    - select
+    - sensor
+    - vacuum
+    - valve
+    - water_heater
 
 zha:
   zigpy_config:
