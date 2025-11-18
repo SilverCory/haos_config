@@ -369,7 +369,7 @@
   - condition: numeric_state
     entity_id: sensor.presence_sensor_fp2_dccc_light_sensor_light_level
     above: -0.3
-    below: 36
+    below: 42
   actions:
   - type: turn_on
     device_id: 4876fc70f80c68d8120f8991604d678e
