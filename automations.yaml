@@ -117,6 +117,10 @@
     device_id: 882ce8662c7a162d0e4ef714c98f66de
     entity_id: 3f3303fcb4c1965bbc7a73af1b2eaf43
     domain: light
+  - type: turn_off
+    device_id: b5ee12fc16ee670d4460450a09831bfe
+    entity_id: 5c16c7859b9e6120b2a53cda3bb7dbe3
+    domain: switch
   mode: single
 - id: '1730231901445'
   alias: Back Garden Lights Wall Toggle
