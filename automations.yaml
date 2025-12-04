@@ -91,6 +91,11 @@
     type: remote_button_short_press
     subtype: button_1
     trigger: device
+  - type: turned_on
+    device_id: 882ce8662c7a162d0e4ef714c98f66de
+    entity_id: 3f3303fcb4c1965bbc7a73af1b2eaf43
+    domain: light
+    trigger: device
   conditions: []
   actions:
   - type: turn_on
