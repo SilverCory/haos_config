@@ -525,3 +525,34 @@
     entity_id: 658892530830aa461d621f5560e9fa93
     type: press
   mode: single
+- id: '1766105074050'
+  alias: Heating - Sync Nest to Hidden Logic
+  description: When user sets Nest to Heat/30, activate Hidden Thermostat at 21.
+  triggers:
+  - entity_id: climate.hall
+    attribute: hvac_mode
+    trigger: state
+  - entity_id: climate.house_thermostat
+    attribute: temperature
+    trigger: state
+  conditions:
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: climate.hall
+      state: heat
+    - condition: state
+      entity_id: climate.hall
+      state: heat_cool
+  actions:
+  - target:
+      entity_id: climate.house_thermostat
+    data:
+      hvac_mode: heat
+    action: climate.set_hvac_mode
+  - target:
+      entity_id: climate.house_thermostat
+    data:
+      temperature: 21.5
+    action: climate.set_temperature
+  mode: restart
