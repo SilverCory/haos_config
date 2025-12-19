@@ -47,6 +47,9 @@ google_assistant:
     - vacuum
     - valve
     - water_heater
+  entity_config:
+    climate.house_thermostat:
+      expose: false
 
 zha:
   zigpy_config:
