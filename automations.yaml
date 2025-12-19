@@ -527,34 +527,42 @@
   mode: single
 - id: '1766105074050'
   alias: Heating - Sync Nest to Hidden Logic
-  description: When user sets Nest to Heat/30, activate Hidden Thermostat at 21.
+  description: When user manually sets Nest to Heat or cranks temperature high (Boost),  force
+    the Hidden Thermostat to Heat mode @ 21.5°C.
   triggers:
-  - entity_id: climate.hall
+  - trigger: state
+    entity_id: climate.hall
     attribute: hvac_mode
-    trigger: state
-  - entity_id: climate.house_thermostat
+    to: heat
+  - trigger: state
+    entity_id: climate.hall
     attribute: temperature
-    trigger: state
   conditions:
   - condition: or
     conditions:
     - condition: state
       entity_id: climate.hall
       state: heat
-    - condition: state
+    - condition: numeric_state
       entity_id: climate.hall
-      state: heat_cool
+      attribute: temperature
+      above: 20
   actions:
-  - target:
-      entity_id: climate.house_thermostat
-    data:
-      hvac_mode: heat
-    action: climate.set_hvac_mode
-  - target:
-      entity_id: climate.house_thermostat
-    data:
-      temperature: 21.5
-    action: climate.set_temperature
+  - if:
+    - condition: template
+      value_template: "{{ not is_state('climate.house_thermostat', 'heat') or \n   state_attr('climate.house_thermostat',
+        'temperature') != 21.5 }}\n"
+    then:
+    - action: climate.set_hvac_mode
+      target:
+        entity_id: climate.house_thermostat
+      data:
+        hvac_mode: heat
+    - action: climate.set_temperature
+      target:
+        entity_id: climate.house_thermostat
+      data:
+        temperature: 21.5
   mode: restart
 - id: '1766105343074'
   alias: Heating - Force Stop at Limit
