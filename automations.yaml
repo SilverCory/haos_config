@@ -546,7 +546,7 @@
     - condition: numeric_state
       entity_id: climate.hall
       attribute: temperature
-      above: 25
+      above: 20
   actions:
   - if:
     - condition: template
