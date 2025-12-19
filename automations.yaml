@@ -566,29 +566,29 @@
   mode: restart
 - id: '1766105343074'
   alias: Heating - Force Stop at Limit
-  description: When limit reached, wait 30s (stealth mode), then turn down Nest to
-    stop boiler.
+  description: When virtual thermostat (House) is satisfied (idle) or turned off,
+    wait 30s,  then sync the physical Nest (Hall) down to match the setpoint, effectively  cutting
+    the boiler.
   triggers:
-  - entity_id: climate.house_thermostat
+  - trigger: state
+    entity_id: climate.house_thermostat
     attribute: hvac_action
     to: idle
-    trigger: state
   - trigger: state
-    entity_id:
-    - climate.house_thermostat
-    to:
-    - 'off'
+    entity_id: climate.house_thermostat
+    to: 'off'
   conditions:
   - condition: template
-    value_template: '{{ state_attr(''climate.hall'', ''temperature'') > state_attr(''climate.house_thermostat'',
-      ''temperature'') }}
-
-      '
+    value_template: "{{ state_attr('climate.hall', 'temperature') | float(0) > \n
+      \  state_attr('climate.house_thermostat', 'temperature') | float(0) }}\n"
   actions:
   - delay: 00:00:30
-  - target:
+  - condition: template
+    value_template: "{{ state_attr('climate.hall', 'temperature') | float(0) > \n
+      \  state_attr('climate.house_thermostat', 'temperature') | float(0) }}\n"
+  - action: climate.set_temperature
+    target:
       entity_id: climate.hall
     data:
       temperature: '{{ state_attr(''climate.house_thermostat'', ''temperature'') }}'
-    action: climate.set_temperature
   mode: restart
