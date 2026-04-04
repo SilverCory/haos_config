@@ -196,8 +196,8 @@
     entity_id: 6fcfc0f97f0cc1d0ade2fb6081bb3003
     domain: light
   - type: turn_off
-    device_id: b5ee12fc16ee670d4460450a09831bfe
-    entity_id: 5c16c7859b9e6120b2a53cda3bb7dbe3
+    device_id: 9d3a3133f20d88096e2a964e62c7e0e7
+    entity_id: ea45f65d89c6b8dd0bb25d54dc92e73d
     domain: switch
   - type: turn_off
     device_id: b5ee12fc16ee670d4460450a09831bfe
