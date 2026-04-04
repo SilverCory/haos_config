@@ -179,6 +179,14 @@
     device_id: 33cbe3bca207abcb971e5ebbc1dbf2fb
     entity_id: 6fcfc0f97f0cc1d0ade2fb6081bb3003
     domain: light
+  - type: turn_on
+    device_id: 9d3a3133f20d88096e2a964e62c7e0e7
+    entity_id: 8b2f93fa8b00e17da9186de58f6054cf
+    domain: switch
+  - type: turn_on
+    device_id: 9d3a3133f20d88096e2a964e62c7e0e7
+    entity_id: ea45f65d89c6b8dd0bb25d54dc92e73d
+    domain: switch
   mode: single
 - id: '1730232158467'
   alias: Front Garden Lights Off
