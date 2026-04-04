@@ -200,8 +200,8 @@
     entity_id: ea45f65d89c6b8dd0bb25d54dc92e73d
     domain: switch
   - type: turn_off
-    device_id: b5ee12fc16ee670d4460450a09831bfe
-    entity_id: 1286a7c16ce1e9b136a1704dc3fd64d7
+    device_id: 9d3a3133f20d88096e2a964e62c7e0e7
+    entity_id: 8b2f93fa8b00e17da9186de58f6054cf
     domain: switch
   mode: single
 - id: '1730232229737'
