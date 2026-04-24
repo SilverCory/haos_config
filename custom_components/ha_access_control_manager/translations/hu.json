@@ -1,0 +1,202 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "tab_icon": "Fül ikon",
+                    "tab_name": "Fül neve",
+                    "path": "Admin kezelőfelülethez az elérés"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "tab_icon": "Fül ikon",
+                    "tab_name": "Fül neve",
+                    "path": "Admin kezelőfelülethez az elérés"
+                }
+            }
+        }
+    },
+    "entity": {
+        "frontend": {
+            "user": {
+                "name": "Felhasználó"
+            },
+            "group": {
+                "name": "Csoportok"
+            },
+            "save": {
+                "name": "Mentés"
+            },
+            "restart": {
+                "name": "Újraindítás"
+            },
+            "confirm_restart_title": {
+                "name": "Újraindítás megerősítése"
+            },
+            "confirm_restart_description": {
+                "name": "Biztosan újra szeretnéd indítani a Home Assistantot?"
+            },
+            "confirm": {
+                "name": "Megerősítés"
+            },
+            "create_new_group": {
+                "name": "Új csoport létrehozása"
+            },
+            "group_name": {
+                "name": "Csoport neve"
+            },
+            "enter_group_name": {
+                "name": "Kérlek, add meg a csoport nevét."
+            },
+            "cancel": {
+                "name": "Visszavonás"
+            },
+            "duplicate": {
+                "name": "Duplikálás"
+            },
+            "duplicate_group": {
+                "name": "Csoport duplikálása"
+            },
+            "duplicate_group_tooltip": {
+                "name": "Csoport duplikálása"
+            },
+            "rename_group": {
+                "name": "Csoport atnevezese"
+            },
+            "rename_group_tooltip": {
+                "name": "Csoport atnevezese"
+            },
+            "delete_group": {
+                "name": "Csoport torlese"
+            },
+            "delete_group_tooltip": {
+                "name": "Csoport torlese"
+            },
+            "delete_group_disabled_tooltip": {
+                "name": "Ez a csoport nem torolheto: legalabb egy felhasznalo kapcsolodik hozza"
+            },
+            "confirm_delete_group_title": {
+                "name": "Csoport torlesenek megerositese"
+            },
+            "confirm_delete_group_description": {
+                "name": "Biztosan torolni szeretned ezt a csoportot?"
+            },
+            "copy_suffix": {
+                "name": "másolat"
+            },
+            "device_permissions_for": {
+                "name": "Eszköz engedélye"
+            },
+            "entity_permissions_for": {
+                "name": "Entitás engedélyei ehhez"
+            },
+            "select_an_user_or_a_group": {
+                "name": "Kérlek, válassz egy csoportot"
+            },
+            "entities_not_found": {
+                "name": "Nem található entitás"
+            },
+            "name": {
+                "name": "Név"
+            },
+            "device": {
+                "name": "Eszköz"
+            },
+            "integration": {
+                "name": "Integráció"
+            },
+            "area": {
+                "name": "Terület"
+            },
+            "entity_id": {
+                "name": "Entitás azonosító"
+            },
+            "read": {
+                "name": "Olvasás"
+            },
+            "write": {
+                "name": "Írás"
+            },
+            "search_by_name": {
+                "name": "Keresés név alapján"
+            },
+            "search_devices": {
+                "name": "Eszközök keresése"
+            },
+            "search_entities": {
+                "name": "Entitások keresése"
+            },
+            "custom_group_warning": {
+                "name": "Figyelem, van egy egyedi csoportod, aminek nincsenek szabályai. Kérlek, adj hozzá legalább egy szabályt, mielőtt újraindítod a Home Assistant-ot."
+            },
+            "dashboard_permissions_for": {
+                "name": "Dashboard engedélyei ehhez"
+            },
+            "dashboards_not_found": {
+                "name": "Nem található dashboard"
+            },
+            "views_not_found": {
+                "name": "Nem található nézet"
+            },
+            "unknown_view": {
+                "name": "Névtelen nézet"
+            },
+            "unknown_dashboard": {
+                "name": "Névtelen dashboard"
+            },
+            "visible": {
+                "name": "Látható"
+            },
+            "group_members_for": {
+                "name": "Csoporttagok ehhez"
+            },
+            "no_users_linked_to_group": {
+                "name": "Ehhez a csoporthoz nincs felhasználó kapcsolva"
+            },
+            "helper_permissions_for": {
+                "name": "Segédek engedélyei ehhez"
+            },
+            "entities_without_devices_permissions_for": {
+                "name": "Eszköz nélküli entitások engedélyei ehhez"
+            },
+            "without_device": {
+                "name": "Eszköz nélkül"
+            },
+            "devices_not_found": {
+                "name": "Nem található eszköz"
+            },
+            "helpers_not_found": {
+                "name": "Nem található segéd"
+            },
+            "dashboard": {
+                "name": "Dashboard"
+            },
+            "view": {
+                "name": "Nézet"
+            },
+            "path": {
+                "name": "Útvonal"
+            },
+            "type": {
+                "name": "Típus"
+            },
+            "search_helpers": {
+                "name": "Segédek keresése"
+            },
+            "search_dashboard_views": {
+                "name": "Dashboard nézetek keresése"
+            },
+            "entire_dashboard": {
+                "name": "Teljes dashboard"
+            },
+            "visible_rows": {
+                "name": "Látható sorok"
+            }
+        }
+    }
+}
