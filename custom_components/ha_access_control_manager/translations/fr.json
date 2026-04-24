@@ -32,6 +32,18 @@
             "save": {
                 "name": "Sauvegarder"
             },
+            "restart": {
+                "name": "Redémarrer"
+            },
+            "confirm_restart_title": {
+                "name": "Confirmer le redémarrage"
+            },
+            "confirm_restart_description": {
+                "name": "Êtes-vous sûr de vouloir redémarrer Home Assistant ?"
+            },
+            "confirm": {
+                "name": "Confirmer"
+            },
             "create_new_group": {
                 "name": "Créer un nouveau groupe"
             },
@@ -44,17 +56,62 @@
             "cancel": {
                 "name": "Annuler"
             },
+            "duplicate": {
+                "name": "Dupliquer"
+            },
+            "duplicate_group": {
+                "name": "Dupliquer le groupe"
+            },
+            "duplicate_group_tooltip": {
+                "name": "Dupliquer ce groupe"
+            },
+            "rename_group": {
+                "name": "Renommer le groupe"
+            },
+            "rename_group_tooltip": {
+                "name": "Renommer ce groupe"
+            },
+            "delete_group": {
+                "name": "Supprimer le groupe"
+            },
+            "delete_group_tooltip": {
+                "name": "Supprimer ce groupe"
+            },
+            "delete_group_disabled_tooltip": {
+                "name": "Impossible de supprimer ce groupe : au moins un utilisateur y est lie"
+            },
+            "confirm_delete_group_title": {
+                "name": "Confirmer la suppression du groupe"
+            },
+            "confirm_delete_group_description": {
+                "name": "Etes-vous sur de vouloir supprimer ce groupe ?"
+            },
+            "copy_suffix": {
+                "name": "copie"
+            },
             "device_permissions_for": {
                 "name": "Les droits d'accès pour"
             },
+            "entity_permissions_for": {
+                "name": "Autorisations des entités pour"
+            },
             "select_an_user_or_a_group": {
-                "name": "S'il vous plaît, sélectionnez un utilisateur ou un groupe"
+                "name": "S'il vous plaît, sélectionnez un groupe"
             },
             "entities_not_found": {
                 "name": "Aucune entité trouvée"
             },
             "name": {
                 "name": "Nom"
+            },
+            "device": {
+                "name": "Appareil"
+            },
+            "integration": {
+                "name": "Intégration"
+            },
+            "area": {
+                "name": "Zone"
             },
             "entity_id": {
                 "name": "Id de l'Entité"
@@ -68,9 +125,78 @@
             "search_by_name": {
                 "name": "Rechercher par nom"
             },
+            "search_devices": {
+                "name": "Rechercher des appareils"
+            },
+            "search_entities": {
+                "name": "Rechercher des entités"
+            },
             "custom_group_warning": {
                 "name": "Attention vous avez un groupe personalisé sans polices déclarées veuillez set au moins une police avant de restart home assistant"
+            },
+            "dashboard_permissions_for": {
+                "name": "Droits des tableaux de bord pour"
+            },
+            "dashboards_not_found": {
+                "name": "Aucun tableau de bord trouvé"
+            },
+            "views_not_found": {
+                "name": "Aucune vue trouvée"
+            },
+            "unknown_view": {
+                "name": "Vue sans nom"
+            },
+            "unknown_dashboard": {
+                "name": "Tableau de bord sans nom"
+            },
+            "visible": {
+                "name": "Visible"
+            },
+            "group_members_for": {
+                "name": "Membres du groupe pour"
+            },
+            "no_users_linked_to_group": {
+                "name": "Aucun utilisateur lié à ce groupe"
+            },
+            "helper_permissions_for": {
+                "name": "Autorisations des helpers pour"
+            },
+            "entities_without_devices_permissions_for": {
+                "name": "Autorisations des entités sans appareils pour"
+            },
+            "without_device": {
+                "name": "Sans appareil"
+            },
+            "devices_not_found": {
+                "name": "Aucun appareil trouvé"
+            },
+            "helpers_not_found": {
+                "name": "Aucun helper trouvé"
+            },
+            "dashboard": {
+                "name": "Tableau de bord"
+            },
+            "view": {
+                "name": "Vue"
+            },
+            "path": {
+                "name": "Chemin"
+            },
+            "type": {
+                "name": "Type"
+            },
+            "search_helpers": {
+                "name": "Rechercher des helpers"
+            },
+            "search_dashboard_views": {
+                "name": "Rechercher des vues de tableaux de bord"
+            },
+            "entire_dashboard": {
+                "name": "Tableau complet"
+            },
+            "visible_rows": {
+                "name": "Lignes visibles"
             }
-        } 
+        }
     }
 }
