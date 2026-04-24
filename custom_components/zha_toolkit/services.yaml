@@ -429,7 +429,7 @@ add_to_group:
         boolean:
 all_routes_and_neighbours:
   name: Scan all Routes and Neighbours
-  description: Scan for all routes and neighbours, results saved to config/scans/...
+  description: Scan for all routes and neighbours, results saved to /homeassistant/scans/...
   fields:
     event_success:
       name: Success Event Name
@@ -1430,7 +1430,7 @@ get_groups:
         boolean:
 get_routes_and_neighbours:
   name: Scan Device's Routes and Neighbours
-  description: Scan for all routes and neighbours, results saved to config/scans/...
+  description: Scan for all routes and neighbours, results saved to /homeassistant/scans/...
   fields:
     ieee:
       name: Device Reference
@@ -1753,16 +1753,6 @@ leave:
       selector:
         entity:
           integration: zha
-    command_data:
-      name: Node to send the Rejoin
-      description: >-
-        (Parent) Node (router) that removes the device
-        of the node)
-      example: 00:0d:6f:00:05:7d:2d:34
-      required: true
-      selector:
-        entity:
-          integration: zha
     tries:
       name: Tries
       description: Number of times the zigbee packet should be attempted
@@ -1917,7 +1907,7 @@ ota_notify:
       name: Firmware Directory
       description: >-
         Path to write ota image(s) to (defaults to zha:zigpy_config:ota:otau_directory
-        value or /config/zigpy_ota)
+        value or /homeassistant/zigpy_ota)
       selector:
         text:
     tries:
@@ -2153,7 +2143,7 @@ remove_group:
         boolean:
 scan_device:
   name: Scan Device
-  description: Scan device (result written to file in /config/scans)
+  description: Scan device (result written to file in /homeassistant/scans)
   fields:
     ieee:
       name: Device Reference
@@ -2602,7 +2592,7 @@ zha_devices:
     json_out:
       name: JSON Filename
       description: >-
-        Filename of JSON to write read data to.  Written to '/config/json' directory
+        Filename of JSON to write read data to.  Written to '/homeassistant/json' directory
       required: false
       example: zha_devices.json
       selector:
