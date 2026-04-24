@@ -32,6 +32,18 @@
             "save": {
                 "name": "Salva"
             },
+            "restart": {
+                "name": "Riavvia"
+            },
+            "confirm_restart_title": {
+                "name": "Conferma riavvio"
+            },
+            "confirm_restart_description": {
+                "name": "Sei sicuro di voler riavviare Home Assistant?"
+            },
+            "confirm": {
+                "name": "Conferma"
+            },
             "create_new_group": {
                 "name": "Crea un nuovo gruppo"
             },
@@ -44,17 +56,62 @@
             "cancel": {
                 "name": "Annulla"
             },
+            "duplicate": {
+                "name": "Duplica"
+            },
+            "duplicate_group": {
+                "name": "Duplica gruppo"
+            },
+            "duplicate_group_tooltip": {
+                "name": "Duplica questo gruppo"
+            },
+            "rename_group": {
+                "name": "Rinomina gruppo"
+            },
+            "rename_group_tooltip": {
+                "name": "Rinomina questo gruppo"
+            },
+            "delete_group": {
+                "name": "Elimina gruppo"
+            },
+            "delete_group_tooltip": {
+                "name": "Elimina questo gruppo"
+            },
+            "delete_group_disabled_tooltip": {
+                "name": "Impossibile eliminare questo gruppo: almeno un utente e collegato"
+            },
+            "confirm_delete_group_title": {
+                "name": "Conferma eliminazione del gruppo"
+            },
+            "confirm_delete_group_description": {
+                "name": "Sei sicuro di voler eliminare questo gruppo?"
+            },
+            "copy_suffix": {
+                "name": "copia"
+            },
             "device_permissions_for": {
                 "name": "Permessi del dispositivo per"
             },
+            "entity_permissions_for": {
+                "name": "Permessi delle entità per"
+            },
             "select_an_user_or_a_group": {
-                "name": "Seleziona un utente o un gruppo"
+                "name": "Seleziona un gruppo"
             },
             "entities_not_found": {
                 "name": "Nessuna entità trovata"
             },
             "name": {
                 "name": "Nome"
+            },
+            "device": {
+                "name": "Dispositivo"
+            },
+            "integration": {
+                "name": "Integrazione"
+            },
+            "area": {
+                "name": "Area"
             },
             "entity_id": {
                 "name": "ID dell'entità"
@@ -68,8 +125,77 @@
             "search_by_name": {
                 "name": "Cerca per nome"
             },
+            "search_devices": {
+                "name": "Cerca dispositivi"
+            },
+            "search_entities": {
+                "name": "Cerca entità"
+            },
             "custom_group_warning": {
                 "name": "Attenzione, hai un gruppo personalizzato senza policy dichiarate. Imposta almeno una policy prima di riavviare Home Assistant"
+            },
+            "dashboard_permissions_for": {
+                "name": "Permessi dashboard per"
+            },
+            "dashboards_not_found": {
+                "name": "Nessuna dashboard trovata"
+            },
+            "views_not_found": {
+                "name": "Nessuna vista trovata"
+            },
+            "unknown_view": {
+                "name": "Vista senza nome"
+            },
+            "unknown_dashboard": {
+                "name": "Dashboard senza nome"
+            },
+            "visible": {
+                "name": "Visibile"
+            },
+            "group_members_for": {
+                "name": "Membri del gruppo per"
+            },
+            "no_users_linked_to_group": {
+                "name": "Nessun utente collegato a questo gruppo"
+            },
+            "helper_permissions_for": {
+                "name": "Permessi degli helper per"
+            },
+            "entities_without_devices_permissions_for": {
+                "name": "Permessi delle entità senza dispositivi per"
+            },
+            "without_device": {
+                "name": "Senza dispositivo"
+            },
+            "devices_not_found": {
+                "name": "Nessun dispositivo trovato"
+            },
+            "helpers_not_found": {
+                "name": "Nessun helper trovato"
+            },
+            "dashboard": {
+                "name": "Dashboard"
+            },
+            "view": {
+                "name": "Vista"
+            },
+            "path": {
+                "name": "Percorso"
+            },
+            "type": {
+                "name": "Tipo"
+            },
+            "search_helpers": {
+                "name": "Cerca helper"
+            },
+            "search_dashboard_views": {
+                "name": "Cerca viste dashboard"
+            },
+            "entire_dashboard": {
+                "name": "Dashboard completo"
+            },
+            "visible_rows": {
+                "name": "Righe visibili"
             }
         }
     }
