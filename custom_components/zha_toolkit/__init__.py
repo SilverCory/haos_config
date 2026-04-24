@@ -1,5 +1,6 @@
 import importlib
 import logging
+import os
 from typing import Any, Optional
 
 import homeassistant.helpers.config_validation as cv
@@ -31,14 +32,16 @@ DATA_ZHATK = "zha_toolkit"
 LOGGER = logging.getLogger(__name__)
 
 try:
-    LOADED_VERSION  # type:ignore[used-before-def] # pylint: disable=used-before-assignment
+    LOADED_VERSION  # type: ignore[used-before-def] # pylint: disable=used-before-assignment
 except NameError:
     LOADED_VERSION = ""
 
 try:
-    DEFAULT_OTAU  # type:ignore[used-before-def] # pylint: disable=used-before-assignment
+    DEFAULT_OTAU  # type: ignore[used-before-def] # pylint: disable=used-before-assignment
 except NameError:
-    DEFAULT_OTAU = "/config/zigpy_ota"
+    DEFAULT_OTAU = (
+        ""  # Initialize as empty string or default path (initialized later)
+    )
 
 
 importlib.reload(PARDEFS)
@@ -386,9 +389,6 @@ SERVICE_SCHEMAS = {
             vol.Required(ATTR_IEEE): vol.Any(
                 cv.entity_id_or_uuid, t.EUI64.convert
             ),
-            vol.Required(ATTR_COMMAND_DATA): vol.Any(
-                cv.entity_id_or_uuid, t.EUI64.convert
-            ),
         },
         extra=vol.ALLOW_EXTRA,
     ),
@@ -633,6 +633,9 @@ async def async_setup(hass, config):
 
     try:
         global DEFAULT_OTAU  # pylint: disable=global-statement
+        DEFAULT_OTAU = os.path.join(
+            hass.config.config_dir, "zigpy_ota"
+        )  # Next statement might fail
         DEFAULT_OTAU = config[ZHA_DOMAIN]["zigpy_config"]["ota"][
             "otau_directory"
         ]
@@ -675,7 +678,7 @@ async def register_services(hass):  # noqa: C901
     async def toolkit_service(service):
         """Run command from toolkit module."""
         LOGGER.info("Running ZHA Toolkit service: %s", service)
-        global LOADED_VERSION  # pylint: disable=global-variable-not-assigned
+        global LOADED_VERSION  # noqa: F824 pylint: disable=global-variable-not-assigned
 
         zha = hass_ref.data["zha"]
         zha_gw: Optional[ZHAGateway] = u.get_zha_gateway(hass)
@@ -695,7 +698,6 @@ async def register_services(hass):  # noqa: C901
         # importlib.reload(PARDEFS)
         # S = PARDEFS.SERVICES
 
-        # Reload ourselves
         mod_path = f"custom_components.{DOMAIN}"
         try:
             module = importlib.import_module(mod_path)
@@ -703,19 +705,9 @@ async def register_services(hass):  # noqa: C901
             LOGGER.error("Couldn't load %s module: %s", DOMAIN, err)
             return
 
-        importlib.reload(module)
-
-        LOGGER.debug("module is %s", module)
-        importlib.reload(u)
-
+        # Disabled reloading ourselves because of "non-blocking" requirements by HA
+        # module, currentVersion = await _reload_module(hass)
         currentVersion = await u.getVersion()
-        if currentVersion != LOADED_VERSION:
-            LOGGER.debug(
-                "Reload services because VERSION changed from %s to %s",
-                LOADED_VERSION,
-                currentVersion,
-            )
-            await _register_services(hass)
 
         ieee_str = service.data.get(ATTR_IEEE)
         cmd = service.data.get(ATTR_COMMAND)
@@ -744,7 +736,7 @@ async def register_services(hass):  # noqa: C901
         event_data = {
             "zha_toolkit_version": currentVersion,
             "zigpy_version": u.getZigpyVersion(),
-            "zigpy_rf_version": u.get_radio_version(app),
+            "zigpy_rf_version": await u.get_radio_version(app),
             "ieee_org": ieee_str,
             "ieee": str(ieee),
             "command": cmd,
@@ -857,7 +849,7 @@ async def register_services(hass):  # noqa: C901
                 key,
                 toolkit_service,
                 schema=value,
-                supports_response=SupportsResponse.OPTIONAL,  # type:ignore[undefined-variable]
+                supports_response=SupportsResponse.OPTIONAL,  # type: ignore[undefined-variable]
             )
         else:
             hass.services.async_register(
@@ -868,6 +860,27 @@ async def register_services(hass):  # noqa: C901
             )
 
     LOADED_VERSION = await u.getVersion()
+
+
+async def _reload_module(hass, module):
+    global LOADED_VERSION  # noqa: F824  pylint: disable=global-statement,global-variable-not-assigned
+
+    # Reload ourselves
+    importlib.reload(module)
+
+    LOGGER.debug("module is %s", module)
+    importlib.reload(u)
+
+    currentVersion = await u.getVersion()
+    if currentVersion != LOADED_VERSION:
+        LOGGER.debug(
+            "Reload services because VERSION changed from %s to %s",
+            LOADED_VERSION,
+            currentVersion,
+        )
+        await _register_services(hass)
+
+    return module, currentVersion
 
 
 async def command_handler_default(
@@ -902,8 +915,6 @@ async def command_handler_default(
 
 
 def reload_services_yaml(hass):
-    import os
-
     from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
     from homeassistant.helpers.service import async_set_service_schema
     from homeassistant.util.yaml.loader import load_yaml
@@ -924,7 +935,7 @@ def reload_services_yaml(hass):
 
 
 async def _register_services(hass):
-    register_services(hass)
+    await register_services(hass)
     await hass.async_add_executor_job(reload_services_yaml, hass)
 
 
