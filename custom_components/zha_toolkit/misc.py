@@ -218,18 +218,18 @@ async def misc_settime(
 
     utc_time = utcnow().astimezone(pytz.UTC).replace(tzinfo=None)
     index = bisect(
-        tz._utc_transition_times, utc_time  # type:ignore[union-attr]
+        tz._utc_transition_times, utc_time  # type: ignore[union-attr]
     )
 
     if index is None:
         event_data["success"] = False
-        event_data[
-            "msg"
-        ] = "misc_settime expects DST changes, needs update if None"
+        event_data["msg"] = (
+            "misc_settime expects DST changes, needs update if None"
+        )
 
     try:
         if (
-            tz._utc_transition_times[index]  # type:ignore[union-attr]
+            tz._utc_transition_times[index]  # type: ignore[union-attr]
             .replace(tzinfo=pytz.UTC)
             .astimezone(tz)
             .dst()
@@ -239,17 +239,17 @@ async def misc_settime(
             # First date must be start of dst period
             index = index - 1
 
-        dst1_obj = tz._utc_transition_times[index]  # type:ignore[union-attr]
-        dst2_obj = tz._utc_transition_times[  # type:ignore[union-attr]
+        dst1_obj = tz._utc_transition_times[index]  # type: ignore[union-attr]
+        dst2_obj = tz._utc_transition_times[  # type: ignore[union-attr]
             index + 1
         ]
         epoch2000 = datetime(2000, 1, 1, tzinfo=None)
         dst1 = (dst1_obj - epoch2000).total_seconds()
         dst2 = (dst2_obj - epoch2000).total_seconds()
-        dst1_aware = tz._utc_transition_times[  # type:ignore[union-attr]
+        dst1_aware = tz._utc_transition_times[  # type: ignore[union-attr]
             index
         ].replace(tzinfo=pytz.UTC)
-        dst2_aware = tz._utc_transition_times[  # type:ignore[union-attr]
+        dst2_aware = tz._utc_transition_times[  # type: ignore[union-attr]
             index + 1
         ].replace(tzinfo=pytz.UTC)
 
@@ -290,7 +290,7 @@ async def misc_settime(
                 u.dict_to_jsonable(read_resp[0]),
                 read_resp[1],
             )
-            u.record_read_data(read_resp, cluster, params, listener)
+            await u.record_read_data(read_resp, cluster, params, listener)
 
         EPOCH2000_TIMESTAMP = 946684800
         utctime_towrite = utcnow().timestamp() - EPOCH2000_TIMESTAMP
@@ -312,7 +312,7 @@ async def misc_settime(
                 u.dict_to_jsonable(read_resp[0]),
                 read_resp[1],
             )
-            u.record_read_data(read_resp, cluster, params, listener)
+            await u.record_read_data(read_resp, cluster, params, listener)
 
         event_data["success"] = True
     except DeliveryError as e:
@@ -337,7 +337,7 @@ async def misc_energy_scan(
 
     if params[p.CSV_FILE] is not None:
         # write CSV header
-        u.append_to_csvfile(
+        await u.append_to_csvfile(
             ["channel", "energy"],
             "csv",
             params[p.CSV_FILE],
@@ -347,7 +347,7 @@ async def misc_energy_scan(
         )
         # write CSV data
         for channel, energy in scan.items():
-            u.append_to_csvfile(
+            await u.append_to_csvfile(
                 [channel, 100 * energy / 255],
                 "csv",
                 params[p.CSV_FILE],
