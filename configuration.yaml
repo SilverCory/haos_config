@@ -66,3 +66,6 @@ zha_toolkit:
 shell_command: 
     fm: which ffmpeg
     av: which avconv
+
+tapo:
+  discovery: true
