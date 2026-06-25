@@ -65,6 +65,13 @@ zha:
 
 zha_toolkit:
 
+logger:
+  default: warning
+  logs:
+    zigpy: debug
+    zhaquirks: debug
+    homeassistant.components.zha: debug
+
 shell_command: 
     fm: which ffmpeg
     av: which avconv
