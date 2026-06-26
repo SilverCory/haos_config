@@ -34,11 +34,11 @@ web_server:
 captive_portal:
 
 remote_receiver:
-  pin: GPIO0
+  pin: GPIO4
   dump: all
 
 remote_transmitter:
-  pin: 4
+  pin: GPIO0
   carrier_duty_percent: 100%
 
 switch:
