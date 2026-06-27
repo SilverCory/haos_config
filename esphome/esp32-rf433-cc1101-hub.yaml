@@ -54,7 +54,7 @@ web_server:
 # Pull in the rtl433 external component for the TPMS CC1101
 # ------------------------------------------------------------
 external_components:
-  - source: github://SilverCory/esphome_rtl433
+  - source: github://SilverCory/esphome_rtl433@master
     components: [rtl433]
 
 
