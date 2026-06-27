@@ -32,10 +32,7 @@ web_server:
 
 # Pull in the rtl_433 custom component for the TPMS
 external_components:
-  - source:
-      type: git
-      url: https://github.com/NorthernMan54/esphome-rtl433
-      ref: main
+  - source: github://NorthernMan54/esphome-rtl433@main
 
 # Define the shared SPI bus
 spi:
