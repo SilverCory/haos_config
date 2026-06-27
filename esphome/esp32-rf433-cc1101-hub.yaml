@@ -35,6 +35,9 @@ captive_portal:
 
 web_server:
   
+safe_mode:
+  boot_is_good_after: 30min
+  num_attempts: 5
 
 # ============================================================
 # ESP Hub — Doorbell Transceiver + TPMS Receiver
@@ -172,3 +175,5 @@ button:
                 repeat:
                   times: 10
                   wait_time: 0s
+
+
