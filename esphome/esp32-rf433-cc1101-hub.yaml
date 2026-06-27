@@ -108,9 +108,9 @@ rtl433:
 sensor:
   - platform: rtl433
     name: "R1200RT Front Tire Pressure"
-    device_model: "Schrader-EG53MA4"
-    device_id: "0A1B2C"
-    field: pressure_kPa
+    sensor_device_model: "Schrader-EG53MA4"
+    sensor_device_id: "0A1B2C"
+    sensor_field: pressure_kPa
     unit_of_measurement: "psi"
     filters:
       - multiply: 0.145038
@@ -119,9 +119,9 @@ sensor:
 
   - platform: rtl433
     name: "R1200RT Front Tire Temperature"
-    device_model: "Schrader-EG53MA4"
-    device_id: "0A1B2C"
-    field: temperature_C
+    sensor_device_model: "Schrader-EG53MA4"
+    sensor_device_id: "0A1B2C"
+    sensor_field: temperature_C
     unit_of_measurement: "°C"
     device_class: temperature
     accuracy_decimals: 1
