@@ -8,7 +8,7 @@ esphome:
     - "SPI"
   platformio_options:
     extra_scripts:
-      - pre:remove_dup.py
+      - pre:/config/esphome/remove_dup.py
 
 esp32:
   variant: esp32
