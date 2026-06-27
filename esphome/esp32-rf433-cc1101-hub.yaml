@@ -29,76 +29,118 @@ wifi:
 captive_portal:
 
 web_server:
+# ============================================================
+# ESP Hub — Doorbell Transceiver + TPMS Receiver
+# ============================================================
+#
+# This node drives two CC1101 modules on a shared SPI bus:
+#
+#   Module 1 — Doorbell (ASK/OOK, CC1101 #1)
+#     CS=GPIO26, GDO0=GPIO25, 433.92 MHz
+#     Handled by ESPHome native remote_receiver / remote_transmitter.
+#
+#   Module 2 — TPMS Receiver (FSK, CC1101 #2)
+#     CS=GPIO14, GDO0=GPIO27
+#     Handled by the rtl433 external component (SilverCory/esphome_rtl433).
+#
+#   Shared SPI: CLK=GPIO18, MISO=GPIO19, MOSI=GPIO22
+#
+# Note: the rtl433 component only supports a single instance.
+# The doorbell CC1101 is driven entirely through remote_receiver /
+# remote_transmitter on its GDO0 pin and does not need rtl433.
+# ============================================================
 
-# Pull in the rtl_433 custom component for the TPMS
+# ------------------------------------------------------------
+# Pull in the rtl433 external component for the TPMS CC1101
+# ------------------------------------------------------------
 external_components:
-  - source: github://NorthernMan54/esphome-rtl433@main
+  - source: github://SilverCory/esphome_rtl433
+    components: [rtl433]
 
-# Define the shared SPI bus
-spi:
-  clk_pin: GPIO18
-  miso_pin: GPIO19
-  mosi_pin: GPIO22 
 
-# ----------------------------------------------------
-# Module 1: Doorbell Transceiver (ASK/OOK)
-# ----------------------------------------------------
-cc1101:
-  cs_pin: GPIO26
-  gdo0_pin: 
-    number: GPIO25
-    allow_other_uses: true
-  frequency: 433.92MHz
-  modulation_type: ASK/OOK
+# ============================================================
+# Module 1: Doorbell Transceiver (ASK/OOK, CC1101 #1)
+# ============================================================
+# The doorbell CC1101 is wired to GPIO25 (GDO0). ESPHome's
+# remote_receiver and remote_transmitter share this pin to
+# receive doorbell button presses and transmit chime codes.
+# No rtl433 involvement — purely native ESPHome components.
+# ------------------------------------------------------------
 
 # Receives doorbell presses from physical buttons outside
 remote_receiver:
-  pin: 
+  pin:
     number: GPIO25
     allow_other_uses: true
   dump: all
 
-# Transmits to your internal doorbell chimes (replaces GPIO4)
+# Transmits to your internal doorbell chimes
 remote_transmitter:
-  pin: 
+  pin:
     number: GPIO25
     allow_other_uses: true
   carrier_duty_percent: 100%
 
-# ----------------------------------------------------
-# Module 2: TPMS Receiver (FSK)
-# ----------------------------------------------------
-rtl_433:
-  cc1101_cs_pin: GPIO14
-  cc1101_gdo0_pin: GPIO27
+# ============================================================
+# Module 2: TPMS Receiver (FSK, CC1101 #2)
+# ============================================================
+# The TPMS CC1101 is wired to CS=GPIO14, GDO0=GPIO27.
+# SPI pins are passed directly to the rtl433 component
+# (the top-level spi: block is NOT used by this component).
+# ------------------------------------------------------------
+
+rtl433:
+  cs_pin: 14
+  gdo0_pin: 27
+  clk_pin: 18
+  miso_pin: 19
+  mosi_pin: 22
+  frequency: 433.92
+  modulation: FSK
+
+# ============================================================
+# TPMS Sensors (native rtl433 platform)
+# ============================================================
+# These sensors subscribe directly to decoded rtl433 messages.
+# No on_message lambda or json: component needed.
+# ------------------------------------------------------------
 
 sensor:
-  - platform: rtl_433
+  - platform: rtl433
     name: "R1200RT Front Tire Pressure"
-    device_id: "0A1B2C" # Replace with your actual sensor ID
-    sensor_type: "pressure_kPa"
+    device_model: "Schrader-EG53MA4"
+    device_id: "0A1B2C"
+    field: pressure_kPa
+    unit_of_measurement: "psi"
     filters:
       - multiply: 0.145038
-    unit_of_measurement: "psi"
     device_class: pressure
+    accuracy_decimals: 1
 
-  - platform: rtl_433
+  - platform: rtl433
     name: "R1200RT Front Tire Temperature"
-    device_id: "0A1B2C" # Replace with your actual sensor ID
-    sensor_type: "temperature_C"
+    device_model: "Schrader-EG53MA4"
+    device_id: "0A1B2C"
+    field: temperature_C
     unit_of_measurement: "°C"
     device_class: temperature
+    accuracy_decimals: 1
 
-# ----------------------------------------------------
+# ============================================================
 # Doorbell Automation Logic
-# ----------------------------------------------------
+# ============================================================
+# A template switch acts as a 10-second lock-out to prevent
+# repeated chime triggers. The button triggers the RC switch
+# code transmission through the doorbell CC1101.
+# ------------------------------------------------------------
+
 switch:
   - platform: template
     name: "Doorbell Ring Lock"
     id: doorbell_lock
     internal: true
     optimistic: true
-    on_turn_on: 
+    on_turn_on:
       then:
         - logger.log: "Doorbell Chime Triggered. Lock active for 10s."
         - delay: 10s
@@ -115,10 +157,10 @@ button:
             switch.is_off: doorbell_lock
           then:
             - switch.turn_on: doorbell_lock
-            # This will now transmit directly through the CC1101 on GPIO25
+            # Transmits directly through the doorbell CC1101 on GPIO25
             - remote_transmitter.transmit_rc_switch_raw:
                 code: '101111000110001101000011'
-                protocol: 
+                protocol:
                   pulse_length: 185
                 repeat:
                   times: 10
