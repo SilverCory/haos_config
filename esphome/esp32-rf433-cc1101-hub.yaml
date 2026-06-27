@@ -1,0 +1,29 @@
+# Board: Generic ESP32 Board (Generic)
+# Definition: definitions/boards/generic-esp32/manifest.yaml
+
+esphome:
+  name: esp32-rf433-cc1101-hub
+  friendly_name: esp32-rf433-cc1101-hub
+
+esp32:
+  variant: esp32
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: "Hk6Db2KpybEaGWudYj0VSxacBrWdrYYxh+2UVuzKEq4="
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: esp32-rf433-cc1 Fallback Hotspot
+    password: "pke0COUPOvSB"
+
+captive_portal:
