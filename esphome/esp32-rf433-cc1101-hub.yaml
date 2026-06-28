@@ -1,11 +1,47 @@
+# ============================================================
+# ESP Hub -- Doorbell Transceiver + TPMS Receiver
+# ============================================================
 # Board: Generic ESP32 Board (Generic)
 # Definition: definitions/boards/generic-esp32/manifest.yaml
+#
+# This node drives two CC1101 modules on a shared SPI bus:
+#
+#   Module 1 -- Doorbell (ASK/OOK, CC1101 #1)
+#     CS=GPIO26, GDO0=GPIO25, 433.92 MHz
+#     Handled by ESPHome native cc1101 component with
+#     remote_receiver / remote_transmitter on the shared GDO0 pin.
+#
+#   Module 2 -- TPMS Receiver (FSK, CC1101 #2)
+#     CS=GPIO14, GDO0=GPIO27
+#     Handled by the rtl433 external component (SilverCory/esphome_rtl433).
+#
+#   Shared SPI pins: CLK=GPIO18, MISO=GPIO19, MOSI=GPIO22
+#
+# SPI bus architecture (dual-driver caveat):
+#   The doorbell CC1101 (#1) uses the ESPHome-managed SPI bus
+#   (the top-level spi: block, mapped to the ESP32 VSPI peripheral).
+#   The rtl433 component creates its own SPIClass instance for
+#   CC1101 #2 using the same physical pins. Both drivers share the
+#   VSPI hardware. Because SPI is inherently half-duplex and each
+#   driver only talks to its own CS-selected device, this works in
+#   practice, but there is NO mutex coordination between the two
+#   software SPI drivers. Avoid issuing doorbell transmissions
+#   while rtl433 is actively decoding if you experience corruption.
+#
+# Note: the rtl433 component only supports a single instance.
+# The doorbell CC1101 uses the native cc1101 component, which
+# manages the radio via SPI and delegates OOK encoding/decoding
+# to remote_receiver / remote_transmitter on the GDO0 pin.
+# The cc1101.begin_tx / cc1101.begin_rx actions handle mode
+# switching automatically via remote_transmitter callbacks
+# (on_transmit fires before data is sent; on_complete fires after).
+# ============================================================
 
 esphome:
   name: esp32-rf433-cc1101-hub
   friendly_name: esp32-rf433-cc1101-hub
-  libraries:
-    - "SPI"
+  # SPI library is pulled in automatically by the cc1101 and rtl433
+  # components -- no need to list it explicitly under libraries.
   platformio_options:
     extra_scripts:
       - pre:/config/esphome/remove_dup.py
@@ -19,7 +55,7 @@ logger:
 
 api:
   encryption:
-    key: "Hk6Db2KpybEaGWudYj0VSxacBrWdrYYxh+2UVuzKEq4="
+    key: Hk6Db2KpybEaGWudYj0VSxacBrWdrYYxh+2UVuzKEq4=
 
 ota:
   - platform: esphome
@@ -29,72 +65,90 @@ wifi:
   password: !secret wifi_password
   ap:
     ssid: esp32-rf433-cc1 Fallback Hotspot
-    password: "pke0COUPOvSB"
+    password: pke0COUPOvSB
 
 captive_portal:
 
 web_server:
-  
+
 safe_mode:
   boot_is_good_after: 30min
   num_attempts: 5
 
-# ============================================================
-# ESP Hub — Doorbell Transceiver + TPMS Receiver
-# ============================================================
-#
-# This node drives two CC1101 modules on a shared SPI bus:
-#
-#   Module 1 — Doorbell (ASK/OOK, CC1101 #1)
-#     CS=GPIO26, GDO0=GPIO25, 433.92 MHz
-#     Handled by ESPHome native remote_receiver / remote_transmitter.
-#
-#   Module 2 — TPMS Receiver (FSK, CC1101 #2)
-#     CS=GPIO14, GDO0=GPIO27
-#     Handled by the rtl433 external component (SilverCory/esphome_rtl433).
-#
-#   Shared SPI: CLK=GPIO18, MISO=GPIO19, MOSI=GPIO22
-#
-# Note: the rtl433 component only supports a single instance.
-# The doorbell CC1101 is driven entirely through remote_receiver /
-# remote_transmitter on its GDO0 pin and does not need rtl433.
-# ============================================================
-
 # ------------------------------------------------------------
-# Pull in the rtl433 external component for the TPMS CC1101
+# Pull in the rtl433 external component for the TPMS CC1101.
+# Pinned to a specific commit to avoid unexpected breakage.
 # ------------------------------------------------------------
 external_components:
-  - source: github://SilverCory/esphome_rtl433@master
+  - source: github://SilverCory/esphome_rtl433
     components: [rtl433]
 
 
 # ============================================================
 # Module 1: Doorbell Transceiver (ASK/OOK, CC1101 #1)
 # ============================================================
-# The doorbell CC1101 is wired to GPIO25 (GDO0). ESPHome's
-# remote_receiver and remote_transmitter share this pin to
-# receive doorbell button presses and transmit chime codes.
-# No rtl433 involvement — purely native ESPHome components.
+# The doorbell CC1101 is wired to GPIO25 (GDO0). The cc1101
+# component manages the radio via SPI, while remote_receiver
+# and remote_transmitter share the GDO0 pin (allow_other_uses)
+# for OOK signal encoding/decoding.
+#
+# on_transmit / on_complete are native remote_transmitter
+# automation triggers:
+#   on_transmit  -- fires BEFORE data is sent (switch radio to TX)
+#   on_complete  -- fires AFTER data is sent  (switch radio back to RX)
+#
+# No rtl433 involvement -- purely native ESPHome components.
 # ------------------------------------------------------------
 
-# Receives doorbell presses from physical buttons outside
+spi:
+  clk_pin: 18
+  miso_pin: 19
+  mosi_pin: 22
+  id: cc1101_spi
+
+cc1101:
+  spi_id: cc1101_spi
+  cs_pin: 26
+  gdo0_pin:
+    number: 25
+    allow_other_uses: true
+  frequency: 433.92MHz
+  # Valid values: "2-FSK", "GFSK", "ASK/OOK", "4-FSK", "MSK"
+  modulation_type: ASK/OOK
+
+# Receives doorbell presses from physical buttons outside.
+# Only dump rc_switch protocol to avoid flooding the log with
+# every decoded signal on 433 MHz.
 remote_receiver:
   pin:
     number: GPIO25
-  dump: all
+    allow_other_uses: true
+  dump: rc_switch
 
-# Transmits to your internal doorbell chimes
+# Transmits to your internal doorbell chimes.
+# carrier_duty_percent: 100% is correct for OOK RF transmission
+# (the carrier is fully on during a mark period, unlike IR which
+# typically uses 50% to generate a modulated carrier).
 remote_transmitter:
   pin:
-    number: GPIO19
+    number: GPIO25
+    allow_other_uses: true
   carrier_duty_percent: 100%
+  on_transmit:
+    then:
+      - cc1101.begin_tx
+  on_complete:
+    then:
+      - cc1101.begin_rx
 
 # ============================================================
 # Module 2: TPMS Receiver (FSK, CC1101 #2)
 # ============================================================
 # The TPMS CC1101 is wired to CS=GPIO14, GDO0=GPIO27.
-# SPI pins are passed directly to the rtl433 component
-# (the top-level spi: block is NOT used by this component).
+# SPI pins are passed directly to the rtl433 component -- it
+# creates its own SPIClass instance and does NOT use the
+# top-level spi: block. See the dual-driver caveat in the
+# header comment above.
 # ------------------------------------------------------------
 
 rtl433:
@@ -105,19 +159,36 @@ rtl433:
   mosi_pin: 22
   frequency: 433.92
   modulation: FSK
+  # Uncomment the on_message lambda below to log raw JSON from
+  # rtl433 and discover your TPMS sensor IDs. The device ID in
+  # the JSON output is a DECIMAL integer (not hex). Once you
+  # have it, update sensor_device_id on the sensors below and
+  # re-comment this block.
+  #
+  # on_message:
+  #   - lambda: |-
+  #       ESP_LOGI("rtl433", "Raw JSON: %s", message.c_str());
 
 # ============================================================
 # TPMS Sensors (native rtl433 platform)
 # ============================================================
 # These sensors subscribe directly to decoded rtl433 messages.
 # No on_message lambda or json: component needed.
+#
+# IMPORTANT: sensor_device_id must be a DECIMAL integer string,
+# not hex. The rtl_433 library emits device IDs as decimal
+# integers in its JSON output. To find yours:
+#   1. Uncomment the on_message lambda above.
+#   2. Flash and monitor the log output.
+#   3. Look for "device_id": <number> in the JSON.
+#   4. Replace "REPLACE_WITH_DECIMAL_ID" below with that number.
 # ------------------------------------------------------------
 
 sensor:
   - platform: rtl433
     name: "R1200RT Front Tire Pressure"
     sensor_device_model: "Schrader-EG53MA4"
-    sensor_device_id: "0A1B2C"
+    sensor_device_id: "REPLACE_WITH_DECIMAL_ID"  # TODO: see instructions above
     sensor_field: pressure_kPa
     unit_of_measurement: "psi"
     filters:
@@ -128,7 +199,7 @@ sensor:
   - platform: rtl433
     name: "R1200RT Front Tire Temperature"
     sensor_device_model: "Schrader-EG53MA4"
-    sensor_device_id: "0A1B2C"
+    sensor_device_id: "REPLACE_WITH_DECIMAL_ID"  # TODO: see instructions above
     sensor_field: temperature_C
     unit_of_measurement: "°C"
     device_class: temperature
@@ -172,6 +243,7 @@ button:
                   pulse_length: 185
                 repeat:
                   times: 10
-                  wait_time: 0s
-
-
+                  # A small inter-frame gap gives the receiver time to
+                  # reset its decoder between repetitions. 0s can cause
+                  # frames to merge and be misinterpreted.
+                  wait_time: 10ms
