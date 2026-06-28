@@ -46,6 +46,8 @@ esphome:
     extra_scripts:
       - pre:/config/esphome/remove_dup.py
 
+  libraries:
+    - SPI
 esp32:
   variant: esp32
   framework:
