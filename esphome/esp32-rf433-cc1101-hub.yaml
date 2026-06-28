@@ -216,8 +216,6 @@ cc1101:
             const TpmsSensor sensors[] = {
               {0x000FFF, "Front Wheel",   id(tpms_front_pressure),  id(tpms_front_temperature)},
               {0x000AAA, "Rear Wheel",    id(tpms_rear_pressure),   id(tpms_rear_temperature)},
-              {0x000BBB, "Rear Wheel 2",  id(tpms_rear2_pressure),  id(tpms_rear2_temperature)},
-              {0x000CCC, "Front Wheel 2", id(tpms_front2_pressure), id(tpms_front2_temperature)},
             };
 
             bool matched = false;
@@ -329,39 +327,6 @@ sensor:
     accuracy_decimals: 1
     state_class: measurement
 
-  # -- Rear Wheel 2 (ID: 0x000BBB) --
-  - platform: template
-    name: "TPMS Rear Wheel 2 Pressure"
-    id: tpms_rear2_pressure
-    unit_of_measurement: "psi"
-    device_class: pressure
-    accuracy_decimals: 1
-    state_class: measurement
-
-  - platform: template
-    name: "TPMS Rear Wheel 2 Temperature"
-    id: tpms_rear2_temperature
-    unit_of_measurement: "°C"
-    device_class: temperature
-    accuracy_decimals: 1
-    state_class: measurement
-
-  # -- Front Wheel 2 (ID: 0x000CCC) --
-  - platform: template
-    name: "TPMS Front Wheel 2 Pressure"
-    id: tpms_front2_pressure
-    unit_of_measurement: "psi"
-    device_class: pressure
-    accuracy_decimals: 1
-    state_class: measurement
-
-  - platform: template
-    name: "TPMS Front Wheel 2 Temperature"
-    id: tpms_front2_temperature
-    unit_of_measurement: "°C"
-    device_class: temperature
-    accuracy_decimals: 1
-    state_class: measurement
 
 # ============================================================
 # TPMS Radio Deaf Workaround
