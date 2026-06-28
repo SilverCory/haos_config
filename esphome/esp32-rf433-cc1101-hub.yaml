@@ -4,50 +4,48 @@
 # Board: Generic ESP32 Board (Generic)
 # Definition: definitions/boards/generic-esp32/manifest.yaml
 #
-# This node drives two CC1101 modules on a shared SPI bus:
+# This node drives two CC1101 modules on a shared SPI bus,
+# both managed by the ESPHome native cc1101 component:
 #
-#   Module 1 -- Doorbell (ASK/OOK, CC1101 #1)
+#   Module 1 -- Doorbell Transceiver (ASK/OOK, CC1101 #1)
+#     id: doorbell_radio
 #     CS=GPIO26, GDO0=GPIO25, 433.92 MHz
-#     Handled by ESPHome native cc1101 component with
-#     remote_receiver / remote_transmitter on the shared GDO0 pin.
+#     Uses remote_receiver / remote_transmitter on the GDO0 pin
+#     for OOK signal encoding/decoding.
 #
-#   Module 2 -- TPMS Receiver (FSK, CC1101 #2)
-#     CS=GPIO14, GDO0=GPIO27
-#     Handled by the rtl433 external component (SilverCory/esphome_rtl433).
+#   Module 2 -- TPMS Receiver (ASK/OOK, CC1101 #2)
+#     id: tpms_radio
+#     CS=GPIO14, GDO0=GPIO27, 433.92 MHz
+#     Uses packet_mode to receive raw Schrader EG53MA4 frames.
+#     Decoded in an on_packet lambda and published to template
+#     sensors.
 #
 #   Shared SPI pins: CLK=GPIO18, MISO=GPIO19, MOSI=GPIO22
 #
-# SPI bus architecture (dual-driver caveat):
-#   The doorbell CC1101 (#1) uses the ESPHome-managed SPI bus
-#   (the top-level spi: block, mapped to the ESP32 VSPI peripheral).
-#   The rtl433 component creates its own SPIClass instance for
-#   CC1101 #2 using the same physical pins. Both drivers share the
-#   VSPI hardware. Because SPI is inherently half-duplex and each
-#   driver only talks to its own CS-selected device, this works in
-#   practice, but there is NO mutex coordination between the two
-#   software SPI drivers. Avoid issuing doorbell transmissions
-#   while rtl433 is actively decoding if you experience corruption.
+# Both CC1101 modules share the same ESPHome-managed SPI bus
+# (VSPI peripheral). The ESPHome SPI driver handles chip-select
+# arbitration, so there is no dual-driver race condition.
 #
-# Note: the rtl433 component only supports a single instance.
-# The doorbell CC1101 uses the native cc1101 component, which
-# manages the radio via SPI and delegates OOK encoding/decoding
-# to remote_receiver / remote_transmitter on the GDO0 pin.
-# The cc1101.begin_tx / cc1101.begin_rx actions handle mode
-# switching automatically via remote_transmitter callbacks
-# (on_transmit fires before data is sent; on_complete fires after).
+# The doorbell CC1101 uses cc1101.begin_tx / cc1101.begin_rx
+# actions triggered by remote_transmitter callbacks:
+#   on_transmit  -- fires BEFORE data is sent (switch radio to TX)
+#   on_complete  -- fires AFTER data is sent  (switch radio back to RX)
+#
+# The TPMS CC1101 runs in packet_mode with sync_mode disabled.
+# The on_packet lambda logs ALL received packets as a hex dump
+# (tagged [tpms_raw]) BEFORE checksum validation, so nothing is
+# silently discarded. Valid EG53MA4 frames are then decoded and
+# logged with [tpms] including the sensor ID in hex.
+#
+# A 60-minute interval resets the TPMS radio as a workaround
+# for the CC1101 "deaf" hardware quirk where the receiver
+# occasionally stops receiving until reset.
 # ============================================================
 
 esphome:
   name: esp32-rf433-cc1101-hub
   friendly_name: esp32-rf433-cc1101-hub
-  # SPI library is pulled in automatically by the cc1101 and rtl433
-  # components -- no need to list it explicitly under libraries.
-  platformio_options:
-    extra_scripts:
-      - pre:/config/esphome/remove_dup.py
 
-  libraries:
-    - SPI
 esp32:
   variant: esp32
   framework:
@@ -77,29 +75,12 @@ safe_mode:
   boot_is_good_after: 30min
   num_attempts: 5
 
-# ------------------------------------------------------------
-# Pull in the rtl433 external component for the TPMS CC1101.
-# Pinned to a specific commit to avoid unexpected breakage.
-# ------------------------------------------------------------
-external_components:
-  - source: github://SilverCory/esphome_rtl433
-    components: [rtl433]
-
-
 # ============================================================
-# Module 1: Doorbell Transceiver (ASK/OOK, CC1101 #1)
+# Shared SPI Bus
 # ============================================================
-# The doorbell CC1101 is wired to GPIO25 (GDO0). The cc1101
-# component manages the radio via SPI, while remote_receiver
-# and remote_transmitter share the GDO0 pin (allow_other_uses)
-# for OOK signal encoding/decoding.
-#
-# on_transmit / on_complete are native remote_transmitter
-# automation triggers:
-#   on_transmit  -- fires BEFORE data is sent (switch radio to TX)
-#   on_complete  -- fires AFTER data is sent  (switch radio back to RX)
-#
-# No rtl433 involvement -- purely native ESPHome components.
+# Both CC1101 modules share this bus. The ESPHome SPI driver
+# manages chip-select lines so only one device is active at a
+# time -- no mutex issues.
 # ------------------------------------------------------------
 
 spi:
@@ -108,19 +89,161 @@ spi:
   mosi_pin: 22
   id: cc1101_spi
 
-cc1101:
-  spi_id: cc1101_spi
-  cs_pin: 26
-  gdo0_pin:
-    number: 25
-    allow_other_uses: true
-  frequency: 433.92MHz
-  # Valid values: "2-FSK", "GFSK", "ASK/OOK", "4-FSK", "MSK"
-  modulation_type: ASK/OOK
+# ============================================================
+# Module 1: Doorbell Transceiver (ASK/OOK, CC1101 #1)
+# ============================================================
+# The doorbell CC1101 is wired to GPIO25 (GDO0). The cc1101
+# component manages the radio via SPI, while remote_receiver
+# and remote_transmitter share the GDO0 pin (allow_other_uses)
+# for OOK signal encoding/decoding.
+# ------------------------------------------------------------
 
+# ============================================================
+# Module 2: TPMS Receiver (ASK/OOK, CC1101 #2)
+# ============================================================
+# The TPMS CC1101 is wired to CS=GPIO14, GDO0=GPIO27.
+# It uses packet_mode to receive raw Schrader EG53MA4 frames.
+#
+# Schrader EG53MA4 protocol (OOK + Manchester, 120 bits):
+#   40-bit preamble/sync + 80 data bits (10 bytes)
+#
+# Packet byte layout (b[0]-b[9]):
+#   b[0]-b[3]: flags (32-bit)
+#   b[4]-b[6]: sensor ID (24-bit big-endian)
+#   b[7]:      pressure in units of 25 mbar (pressure_kPa = b[7] * 2.5)
+#   b[8]:      temperature in raw deg F (temp_C = (b[8] - 32) * 5/9)
+#   b[9]:      checksum = sum(b[0..8]) & 0xFF
+#
+# sync_mode is set to None because the exact 2-byte CC1101 sync
+# word for EG53MA4 is not definitively documented. All frame
+# validation is done by checksum in the on_packet lambda. This
+# means more noise packets are received, but all invalid ones
+# are discarded by the checksum check.
+# ------------------------------------------------------------
+
+cc1101:
+  # -- Module 1: Doorbell --
+  - id: doorbell_radio
+    spi_id: cc1101_spi
+    cs_pin: 26
+    gdo0_pin:
+      number: 25
+      allow_other_uses: true
+    frequency: 433.92MHz
+    modulation_type: ASK/OOK
+
+  # -- Module 2: TPMS Receiver --
+  - id: tpms_radio
+    spi_id: cc1101_spi
+    cs_pin: 14
+    gdo0_pin: 27
+    frequency: 433.92MHz
+    modulation_type: ASK/OOK
+    manchester: true
+    symbol_rate: 4800
+    filter_bandwidth: 58kHz
+    rx_attenuation: 0dB
+    packet_mode: true
+    packet_length: 10
+    sync_mode: None
+    num_preamble: 0
+    on_packet:
+      then:
+        - lambda: |-
+            // ---- Raw hex dump of EVERY received packet ----
+            // This runs BEFORE any filtering so you can see all radio
+            // traffic, including packets that fail checksum or have an
+            // unexpected length.  Use this output to visually identify
+            // your sensor ID bytes when using a TPMS activation tool.
+            //
+            // Example output:
+            //   [tpms_raw] 10 bytes: AA BB CC DD 0A 1B 2C 64 48 XX
+            //   [tpms] ID=0A1B2C [Front Wheel] pressure=36.2 psi temp=20.0 C
+            //
+            // For packets that fail checksum or are the wrong length:
+            //   [tpms_raw] 7 bytes: AA BB CC 0A 1B 2C DD
+
+            char hex[200];
+            int pos = 0;
+            for (size_t i = 0; i < x.size() && pos < (int)sizeof(hex) - 4; i++) {
+              if (i > 0) hex[pos++] = ' ';
+              pos += snprintf(hex + pos, sizeof(hex) - pos, "%02X", x[i]);
+            }
+            hex[pos] = '\0';
+            ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
+
+            // ---- Schrader EG53MA4 TPMS decoder ----
+            // Expect exactly 10 bytes: 4 flags + 3 ID + 1 pressure + 1 temp + 1 checksum
+            if (x.size() < 10) return;
+
+            // Validate checksum: sum of bytes 0-8 must equal byte 9
+            uint8_t chk = 0;
+            for (int i = 0; i < 9; i++) chk += x[i];
+            if (chk != x[9]) return;  // checksum mismatch -- already logged as raw above
+
+            // Extract sensor ID (24-bit big-endian from bytes 4-6)
+            uint32_t sensor_id = ((uint32_t)x[4] << 16) | ((uint32_t)x[5] << 8) | x[6];
+
+            // Extract pressure: each unit = 25 mbar = 2.5 kPa
+            float pressure_kpa = x[7] * 2.5f;
+            float pressure_psi = pressure_kpa * 0.145038f;
+
+            // Extract temperature: raw value is degrees Fahrenheit
+            float temp_f = (float)x[8];
+            float temp_c = (temp_f - 32.0f) * 5.0f / 9.0f;
+
+            // ---- Sensor dispatch table ----
+            // Each entry maps a 24-bit sensor ID to a human-readable name
+            // and its corresponding pressure + temperature ESPHome sensors.
+            //
+            // To add a new TPMS sensor:
+            //   1. Add a template sensor pair in the 'sensor:' section below
+            //      (copy an existing pair and change name + id)
+            //   2. Add a row to this table with the sensor's hex ID,
+            //      a display name, and id() references to the new sensors
+            //   3. Flash the updated firmware
+            //
+            // The IDs below are placeholders. To discover your real IDs:
+            //   1. Use a TPMS activation tool to wake the Schrader EG53MA4
+            //   2. Watch the ESPHome log for [tpms] entries
+            //   3. The log shows ID=XXXXXX -- replace the placeholder below
+            struct TpmsSensor {
+              uint32_t sensor_id;
+              const char* name;
+              sensor::Sensor* pressure;
+              sensor::Sensor* temperature;
+            };
+            const TpmsSensor sensors[] = {
+              {0x000FFF, "Front Wheel",   id(tpms_front_pressure),  id(tpms_front_temperature)},
+              {0x000AAA, "Rear Wheel",    id(tpms_rear_pressure),   id(tpms_rear_temperature)},
+              {0x000BBB, "Rear Wheel 2",  id(tpms_rear2_pressure),  id(tpms_rear2_temperature)},
+              {0x000CCC, "Front Wheel 2", id(tpms_front2_pressure), id(tpms_front2_temperature)},
+            };
+
+            bool matched = false;
+            for (const auto& s : sensors) {
+              if (sensor_id == s.sensor_id) {
+                s.pressure->publish_state(pressure_psi);
+                s.temperature->publish_state(temp_c);
+                ESP_LOGI("tpms", "ID=%06X [%s] pressure=%.1f psi temp=%.1f C (raw: P=%u T=%u)",
+                         sensor_id, s.name, pressure_psi, temp_c, x[7], x[8]);
+                matched = true;
+                break;
+              }
+            }
+            if (!matched) {
+              ESP_LOGI("tpms", "ID=%06X [unknown] pressure=%.1f psi temp=%.1f C (raw: P=%u T=%u)",
+                       sensor_id, pressure_psi, temp_c, x[7], x[8]);
+            }
+
+# ============================================================
+# Doorbell Remote Receiver / Transmitter
+# ============================================================
 # Receives doorbell presses from physical buttons outside.
 # Only dump rc_switch protocol to avoid flooding the log with
 # every decoded signal on 433 MHz.
+# ------------------------------------------------------------
+
 remote_receiver:
   pin:
     number: GPIO25
@@ -136,76 +259,125 @@ remote_transmitter:
     number: GPIO25
     allow_other_uses: true
   carrier_duty_percent: 100%
+  non_blocking: true
   on_transmit:
     then:
-      - cc1101.begin_tx
+      - cc1101.begin_tx:
+          id: doorbell_radio
   on_complete:
     then:
-      - cc1101.begin_rx
+      - cc1101.begin_rx:
+          id: doorbell_radio
 
 # ============================================================
-# Module 2: TPMS Receiver (FSK, CC1101 #2)
+# TPMS Template Sensors
 # ============================================================
-# The TPMS CC1101 is wired to CS=GPIO14, GDO0=GPIO27.
-# SPI pins are passed directly to the rtl433 component -- it
-# creates its own SPIClass instance and does NOT use the
-# top-level spi: block. See the dual-driver caveat in the
-# header comment above.
-# ------------------------------------------------------------
-
-rtl433:
-  cs_pin: 14
-  gdo0_pin: 27
-  clk_pin: 18
-  miso_pin: 19
-  mosi_pin: 22
-  frequency: 433.92
-  modulation: FSK
-  # Uncomment the on_message lambda below to log raw JSON from
-  # rtl433 and discover your TPMS sensor IDs. The device ID in
-  # the JSON output is a DECIMAL integer (not hex). Once you
-  # have it, update sensor_device_id on the sensors below and
-  # re-comment this block.
-  #
-  # on_message:
-  #   - lambda: |-
-  #       ESP_LOGI("rtl433", "Raw JSON: %s", message.c_str());
-
-# ============================================================
-# TPMS Sensors (native rtl433 platform)
-# ============================================================
-# These sensors subscribe directly to decoded rtl433 messages.
-# No on_message lambda or json: component needed.
+# Each physical TPMS sensor gets its own pressure + temperature
+# pair. The on_packet lambda dispatch table (above) routes
+# decoded frames to the correct sensors by matching the 24-bit
+# sensor ID.
 #
-# IMPORTANT: sensor_device_id must be a DECIMAL integer string,
-# not hex. The rtl_433 library emits device IDs as decimal
-# integers in its JSON output. To find yours:
-#   1. Uncomment the on_message lambda above.
-#   2. Flash and monitor the log output.
-#   3. Look for "device_id": <number> in the JSON.
-#   4. Replace "REPLACE_WITH_DECIMAL_ID" below with that number.
+# To add a new TPMS sensor:
+#   1. Copy one pressure + temperature pair below and change
+#      the 'name' and 'id' fields to match your new sensor.
+#   2. Add a matching row to the dispatch table in the
+#      on_packet lambda (in the cc1101 TPMS section above).
+#   3. Flash the updated firmware.
+#
+# To discover your real sensor IDs:
+#   1. Use a TPMS activation tool to wake the Schrader EG53MA4
+#   2. Watch the ESPHome log for [tpms] entries
+#   3. The log shows ID=XXXXXX -- use that hex value in the
+#      dispatch table
+#
+# The IDs below (0x000FFF, etc.) are placeholders until real
+# sensor IDs are discovered.
 # ------------------------------------------------------------
 
 sensor:
-  - platform: rtl433
-    name: "R1200RT Front Tire Pressure"
-    sensor_device_model: "Schrader-EG53MA4"
-    sensor_device_id: "REPLACE_WITH_DECIMAL_ID"  # TODO: see instructions above
-    sensor_field: pressure_kPa
+  # -- Front Wheel (ID: 0x000FFF) --
+  - platform: template
+    name: "TPMS Front Wheel Pressure"
+    id: tpms_front_pressure
     unit_of_measurement: "psi"
-    filters:
-      - multiply: 0.145038
     device_class: pressure
     accuracy_decimals: 1
+    state_class: measurement
 
-  - platform: rtl433
-    name: "R1200RT Front Tire Temperature"
-    sensor_device_model: "Schrader-EG53MA4"
-    sensor_device_id: "REPLACE_WITH_DECIMAL_ID"  # TODO: see instructions above
-    sensor_field: temperature_C
+  - platform: template
+    name: "TPMS Front Wheel Temperature"
+    id: tpms_front_temperature
     unit_of_measurement: "°C"
     device_class: temperature
     accuracy_decimals: 1
+    state_class: measurement
+
+  # -- Rear Wheel (ID: 0x000AAA) --
+  - platform: template
+    name: "TPMS Rear Wheel Pressure"
+    id: tpms_rear_pressure
+    unit_of_measurement: "psi"
+    device_class: pressure
+    accuracy_decimals: 1
+    state_class: measurement
+
+  - platform: template
+    name: "TPMS Rear Wheel Temperature"
+    id: tpms_rear_temperature
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+    state_class: measurement
+
+  # -- Rear Wheel 2 (ID: 0x000BBB) --
+  - platform: template
+    name: "TPMS Rear Wheel 2 Pressure"
+    id: tpms_rear2_pressure
+    unit_of_measurement: "psi"
+    device_class: pressure
+    accuracy_decimals: 1
+    state_class: measurement
+
+  - platform: template
+    name: "TPMS Rear Wheel 2 Temperature"
+    id: tpms_rear2_temperature
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+    state_class: measurement
+
+  # -- Front Wheel 2 (ID: 0x000CCC) --
+  - platform: template
+    name: "TPMS Front Wheel 2 Pressure"
+    id: tpms_front2_pressure
+    unit_of_measurement: "psi"
+    device_class: pressure
+    accuracy_decimals: 1
+    state_class: measurement
+
+  - platform: template
+    name: "TPMS Front Wheel 2 Temperature"
+    id: tpms_front2_temperature
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+    state_class: measurement
+
+# ============================================================
+# TPMS Radio Deaf Workaround
+# ============================================================
+# The CC1101 can occasionally stop receiving (known hardware
+# quirk). This interval resets the TPMS radio every 60 minutes
+# and puts it back into RX mode to recover.
+# ------------------------------------------------------------
+
+interval:
+  - interval: 60min
+    then:
+      - cc1101.reset:
+          id: tpms_radio
+      - cc1101.begin_rx:
+          id: tpms_radio
 
 # ============================================================
 # Doorbell Automation Logic
