@@ -170,7 +170,7 @@ cc1101:
               pos += snprintf(hex + pos, sizeof(hex) - pos, "%02X", x[i]);
             }
             hex[pos] = '\0';
-            # ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
+            // ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
 
             // ---- Schrader EG53MA4 TPMS decoder ----
             // Expect exactly 10 bytes: 4 flags + 3 ID + 1 pressure + 1 temp + 1 checksum
