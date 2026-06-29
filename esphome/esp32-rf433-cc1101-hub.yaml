@@ -45,12 +45,21 @@
 esphome:
   name: esp32-rf433-cc1101-hub
   friendly_name: esp32-rf433-cc1101-hub
+  on_boot:
+    priority: -100
+    then:
+      - cc1101.begin_rx:
+          id: doorbell_radio
+      - cc1101.begin_rx:
+          id: tpms_radio
 
 esp32:
+  board: esp32dev
   variant: ESP32
   framework:
     type: esp-idf
 logger:
+  level: DEBUG
 
 api:
   encryption:
@@ -245,7 +254,7 @@ remote_receiver:
   pin:
     number: GPIO25
     allow_other_uses: true
-  dump: rc_switch
+  dump: all  # DEBUG: revert to "rc_switch" once reception is confirmed
 
 # Transmits to your internal doorbell chimes.
 # carrier_duty_percent: 100% is correct for OOK RF transmission
@@ -256,7 +265,6 @@ remote_transmitter:
     number: GPIO25
     allow_other_uses: true
   carrier_duty_percent: 100%
-  non_blocking: true
   on_transmit:
     then:
       - cc1101.begin_tx:
