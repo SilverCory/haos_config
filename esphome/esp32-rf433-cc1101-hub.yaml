@@ -382,17 +382,12 @@ button:
             switch.is_off: doorbell_lock
           then:
             - switch.turn_on: doorbell_lock
-            # Switch CC1101 to TX before transmitting and wait for it to settle.
-            # on_transmit fires too close to the first pulse for the CC1101 to
-            # complete its IDLE→TX state transition in time.
-            - cc1101.begin_tx:
-                id: doorbell_radio
-            - delay: 5ms
+            - logger.log: "Doorbell TX starting"
             # Transmits the captured signal from the physical doorbell button.
             # Source: raw dump captured on GPIO25 via CC1101 RX (dump: raw).
             # Positive = mark (carrier on), negative = space (carrier off), µs.
-            # One frame extracted from the repeating burst; outer repeat resends
-            # it 8 times with the same ~5800 µs inter-frame gap seen in capture.
+            # on_transmit/on_complete on the remote_transmitter handle switching
+            # the CC1101 between TX and RX mode around this call.
             - remote_transmitter.transmit_raw:
                 carrier_frequency: 0Hz
                 code:
@@ -400,5 +395,3 @@ button:
                 repeat:
                   times: 20
                   wait_time: 0ms
-            - cc1101.begin_rx:
-                id: doorbell_radio
