@@ -20,8 +20,7 @@ class DoorbellRxHelper
     auto *self = static_cast<DoorbellRxHelper *>(comp);
     rmt_enable(self->channel_);
     rmt_receive(self->channel_,
-                reinterpret_cast<uint8_t *>(self->store_.buffer),
+                const_cast<uint8_t *>(self->store_.buffer),
                 self->store_.receive_size, &self->store_.config);
   }
 };
-
