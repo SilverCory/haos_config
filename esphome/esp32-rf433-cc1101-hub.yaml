@@ -264,7 +264,7 @@ remote_transmitter:
   pin:
     number: GPIO25
     allow_other_uses: true
-  carrier_duty_percent: 100%
+  carrier_duty_percent: 1%
 
 # ============================================================
 # TPMS Template Sensors
@@ -387,11 +387,11 @@ button:
             # carrier_frequency must be non-zero on esp-idf; 10Hz is electrically
             # identical to 0Hz for OOK but avoids a silent RMT failure on esp-idf.
             - remote_transmitter.transmit_raw:
-                carrier_frequency: 10Hz
                 code:
                   [577, -185, 571, -177, 579, -173, 582, -207, 193, -560, 185, -545, 196, -561, 567, -207, 560, -188, 219, -544, 173, -578, 195, -551, 585, -193, 578, -191, 184, -576, 587, -185, 194, -552, 198, -565, 171, -578, 194, -555, 571, -214, 573, -176, 199, -5800]
                 repeat:
                   times: 20
                   wait_time: 0ms
+            - logger.log: "Doorbell TX done"
             - cc1101.begin_rx:
                 id: doorbell_radio
