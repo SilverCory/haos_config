@@ -45,6 +45,8 @@
 esphome:
   name: esp32-rf433-cc1101-hub
   friendly_name: esp32-rf433-cc1101-hub
+  includes:
+    - doorbell_rx_helper.h
   on_boot:
     priority: -100
     then:
@@ -385,7 +387,7 @@ button:
             # remote_transmitter both use the RMT peripheral on GPIO25. The
             # active RX channel prevents the TX channel from driving the pin.
             - lambda: |-
-                rmt_disable(id(doorbell_receiver).channel_);
+                DoorbellRxHelper::pause_rx(&id(doorbell_receiver));
             - cc1101.begin_tx:
                 id: doorbell_radio
             - delay: 2ms
@@ -402,8 +404,4 @@ button:
                 id: doorbell_radio
             # Re-enable the RMT RX channel after TX completes.
             - lambda: |-
-                rmt_enable(id(doorbell_receiver).channel_);
-                rmt_receive(id(doorbell_receiver).channel_,
-                            (uint8_t *)id(doorbell_receiver).store_.buffer,
-                            id(doorbell_receiver).store_.receive_size,
-                            &id(doorbell_receiver).store_.config);
+                DoorbellRxHelper::resume_rx(&id(doorbell_receiver));
