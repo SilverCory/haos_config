@@ -47,10 +47,9 @@ esphome:
   friendly_name: esp32-rf433-cc1101-hub
 
 esp32:
-  variant: esp32
+  variant: ESP32
   framework:
-    type: arduino
-
+    type: esp-idf
 logger:
 
 api:
@@ -84,9 +83,9 @@ safe_mode:
 # ------------------------------------------------------------
 
 spi:
-  clk_pin: 18
-  miso_pin: 19
-  mosi_pin: 22
+  clk_pin: GPIO18
+  miso_pin: GPIO19
+  mosi_pin: GPIO22
   id: cc1101_spi
 
 # ============================================================
@@ -125,9 +124,9 @@ cc1101:
   # -- Module 1: Doorbell --
   - id: doorbell_radio
     spi_id: cc1101_spi
-    cs_pin: 26
+    cs_pin: GPIO26
     gdo0_pin:
-      number: 25
+      number: GPIO25
       allow_other_uses: true
     frequency: 433.92MHz
     modulation_type: ASK/OOK
@@ -135,8 +134,8 @@ cc1101:
   # -- Module 2: TPMS Receiver --
   - id: tpms_radio
     spi_id: cc1101_spi
-    cs_pin: 14
-    gdo0_pin: 27
+    cs_pin: GPIO14
+    gdo0_pin: GPIO27
     frequency: 433.92MHz
     modulation_type: ASK/OOK
     manchester: true
