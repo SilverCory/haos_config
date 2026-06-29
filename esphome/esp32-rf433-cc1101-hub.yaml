@@ -383,15 +383,14 @@ button:
           then:
             - switch.turn_on: doorbell_lock
             # Transmits the captured signal from the physical doorbell button.
-            # Source: Pronto dump (dump: all) captured on GPIO25 via CC1101 RX.
-            # Converted to raw µs timings (Pronto unit × 26.3 µs, rounded).
-            # Positive = mark (carrier on), negative = space (carrier off).
-            # The 8 repetitions in the original capture are collapsed to one
-            # frame here; the outer repeat: sends it 8 times with a ~6 ms gap.
+            # Source: raw dump captured on GPIO25 via CC1101 RX (dump: raw).
+            # Positive = mark (carrier on), negative = space (carrier off), µs.
+            # One frame extracted from the repeating burst; outer repeat resends
+            # it 8 times with the same ~5800 µs inter-frame gap seen in capture.
             - remote_transmitter.transmit_raw:
                 carrier_frequency: 0Hz
                 code:
-                  [53, -237, 579, -395, 552, -316, 579, -342, 552, -395, 185, -737, 211, -605, 211, -632, 552, -342, 579, -342, 264, -605, 211, -632, 211, -632, 552, -395, 552, -395, 211, -632, 552, -395, 264, -605, 211, -632, 211, -632, 211, -632, 500, -395, 500, -342, 264, -5865]
+                  [577, -185, 571, -177, 579, -173, 582, -207, 193, -560, 185, -545, 196, -561, 567, -207, 560, -188, 219, -544, 173, -578, 195, -551, 585, -193, 578, -191, 184, -576, 587, -185, 194, -552, 198, -565, 171, -578, 194, -555, 571, -214, 573, -176, 199, -5800]
                 repeat:
                   times: 8
                   wait_time: 0ms
