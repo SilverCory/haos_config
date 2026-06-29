@@ -251,6 +251,7 @@ cc1101:
 # ------------------------------------------------------------
 
 remote_receiver:
+  id: doorbell_receiver
   pin:
     number: GPIO25
     allow_other_uses: true
@@ -375,6 +376,16 @@ button:
           then:
             - switch.turn_on: doorbell_lock
             - logger.log: "Doorbell TX starting"
+            # Disable the RMT RX channel on GPIO25 before TX.
+            # remote_receiver and remote_transmitter both use the RMT peripheral
+            # on GPIO25. The active RX channel prevents the TX channel from driving
+            # the pin. Disabling the RX channel's GPIO interrupt and the RMT RX
+            # peripheral allows the TX RMT channel to take over the pin.
+            # Disable the RMT RX channel before TX -- remote_receiver and
+            # remote_transmitter both use the RMT peripheral on GPIO25. The
+            # active RX channel prevents the TX channel from driving the pin.
+            - lambda: |-
+                rmt_disable(id(doorbell_receiver).channel_);
             - cc1101.begin_tx:
                 id: doorbell_radio
             - delay: 2ms
@@ -389,3 +400,10 @@ button:
             - logger.log: "Doorbell TX done"
             - cc1101.begin_rx:
                 id: doorbell_radio
+            # Re-enable the RMT RX channel after TX completes.
+            - lambda: |-
+                rmt_enable(id(doorbell_receiver).channel_);
+                rmt_receive(id(doorbell_receiver).channel_,
+                            (uint8_t *)id(doorbell_receiver).store_.buffer,
+                            id(doorbell_receiver).store_.receive_size,
+                            &id(doorbell_receiver).store_.config);
