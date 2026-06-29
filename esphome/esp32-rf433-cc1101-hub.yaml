@@ -59,7 +59,7 @@ esp32:
   framework:
     type: esp-idf
 logger:
-  level: DEBUG
+  level: VERBOSE
 
 api:
   encryption:
@@ -375,17 +375,11 @@ button:
           then:
             - switch.turn_on: doorbell_lock
             - logger.log: "Doorbell TX starting"
-            # Switch CC1101 to TX and allow synthesizer to settle before RMT fires.
-            # on_transmit callback fires too close to the first RMT pulse on esp-idf;
-            # explicit begin_tx + delay here ensures the radio is ready in time.
             - cc1101.begin_tx:
                 id: doorbell_radio
             - delay: 2ms
             # Transmits the captured signal from the physical doorbell button.
             # Source: raw dump captured on GPIO25 via CC1101 RX (dump: raw).
-            # Positive = mark (carrier on), negative = space (carrier off), µs.
-            # carrier_frequency must be non-zero on esp-idf; 10Hz is electrically
-            # identical to 0Hz for OOK but avoids a silent RMT failure on esp-idf.
             - remote_transmitter.transmit_raw:
                 code:
                   [577, -185, 571, -177, 579, -173, 582, -207, 193, -560, 185, -545, 196, -561, 567, -207, 560, -188, 219, -544, 173, -578, 195, -551, 585, -193, 578, -191, 184, -576, 587, -185, 194, -552, 198, -565, 171, -578, 194, -555, 571, -214, 573, -176, 199, -5800]
