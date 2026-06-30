@@ -147,10 +147,10 @@ cc1101:
     modulation_type: ASK/OOK
     manchester: false
     symbol_rate: 4159
-    filter_bandwidth: 58kHz
+    filter_bandwidth: 203kHz
     rx_attenuation: 0dB
     packet_mode: true
-    packet_length: 64
+    packet_length: 20
     sync_mode: None
     num_preamble: 0
     on_packet:
