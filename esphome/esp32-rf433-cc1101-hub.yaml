@@ -143,11 +143,11 @@ cc1101:
     spi_id: cc1101_spi
     cs_pin: GPIO14
     gdo0_pin: GPIO27
-    frequency: 433.92MHz
+    frequency: 434.42MHz  # BMW 8532731 may use 434.42MHz; revert to 433.92MHz if no joy
     modulation_type: ASK/OOK
     manchester: true
     symbol_rate: 4800
-    filter_bandwidth: 58kHz
+    filter_bandwidth: 203kHz  # Wide to catch frequency offset; narrow back to 58kHz once confirmed
     rx_attenuation: 0dB
     packet_mode: true
     packet_length: 10
