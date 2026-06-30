@@ -169,6 +169,9 @@ cc1101:
             // For packets that fail checksum or are the wrong length:
             //   [tpms_raw] 7 bytes: AA BB CC 0A 1B 2C DD
 
+            // Suppress all-0xFF noise packets before logging
+            if (x.size() >= 3 && x[0] == 0xFF && x[1] == 0xFF && x[2] == 0xFF) return;
+
             char hex[200];
             int pos = 0;
             for (size_t i = 0; i < x.size() && pos < (int)sizeof(hex) - 4; i++) {
@@ -181,6 +184,10 @@ cc1101:
             // ---- Schrader EG53MA4 TPMS decoder ----
             // Expect exactly 10 bytes: 4 flags + 3 ID + 1 pressure + 1 temp + 1 checksum
             if (x.size() < 10) return;
+
+            // Filter all-0xFF packets (noise fills FIFO with 0xFF; 9*0xFF sums
+            // to 0xFF mod 256, so they pass the checksum — reject explicitly).
+            if (x[0] == 0xFF && x[1] == 0xFF && x[2] == 0xFF) return;
 
             // Validate checksum: sum of bytes 0-8 must equal byte 9
             uint8_t chk = 0;
