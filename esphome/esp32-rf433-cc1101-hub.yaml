@@ -180,35 +180,43 @@ cc1101:
             ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
 
             // ---- Software Manchester decode ----
-            // Raw OOK chips at 8621 baud, Manchester encoding: 10=1, 01=0 (zerobit convention)
-            // Try both bit offsets (0 and 1) since CC1101 may latch mid-chip.
-            // A valid EG53MA4 frame is 10 bytes after Manchester decode.
-            // Layout: b[0..3]=flags, b[4..6]=ID(24-bit), b[7]=pressure, b[8]=temp_F, b[9]=checksum
+            // CC1101 at 8621 baud captures ~2 samples per Manchester chip (chip=123µs, sample=116µs).
+            // Each actual chip spans ~2 CC1101 samples. We collapse pairs of same-valued samples
+            // into a single chip, then decode Manchester (10->1, 01->0 zerobit convention).
+            // We try all starting offsets 0..3 to handle arbitrary alignment.
+            // EG53MA4 frame after preamble: 10 bytes = 80 Manchester bits = 160 chips.
 
-            // Pack all 20 raw bytes into a 160-bit stream for easy bit access
             auto get_bit = [&](int i) -> int {
+              if (i >= 160) return 0;
               return (x[i / 8] >> (7 - (i % 8))) & 1;
             };
 
-            for (int offset = 0; offset <= 1; offset++) {
+            // Collapse 2x-oversampled bits into chips by majority/first-sample
+            // Try offsets 0..3 for phase alignment
+            for (int offset = 0; offset < 4; offset++) {
+              // Extract chips: take first sample of each chip-pair
+              // chip i = get_bit(offset + i*2), ignore second sample
+              // Then decode Manchester from chips: chip pairs (chip[2b], chip[2b+1])
+              // 10->1, 01->0; 00 or 11 = invalid
+
               uint8_t dec[10] = {};
               bool valid_mc = true;
-              for (int b = 0; b < 10 * 8; b++) {
-                int chip_pos = offset + b * 2;
-                if (chip_pos + 1 >= 160) { valid_mc = false; break; }
-                int c0 = get_bit(chip_pos);
-                int c1 = get_bit(chip_pos + 1);
-                if (c0 == c1) { valid_mc = false; break; } // not valid Manchester
-                int bit = c0; // 10->1, 01->0 (Manchester zerobit)
-                dec[b / 8] |= (bit << (7 - (b % 8)));
+              int chips_needed = 10 * 8 * 2; // 160 chips for 80 Manchester bits
+              for (int mc_bit = 0; mc_bit < 80; mc_bit++) {
+                int chip0_pos = offset + mc_bit * 4;     // first chip of Manchester pair (2 samples each)
+                int chip1_pos = offset + mc_bit * 4 + 2; // second chip of Manchester pair
+                if (chip1_pos + 1 >= 160) { valid_mc = false; break; }
+                int c0 = get_bit(chip0_pos);   // first sample of chip0
+                int c1 = get_bit(chip1_pos);   // first sample of chip1
+                if (c0 == c1) { valid_mc = false; break; } // invalid Manchester
+                // zerobit: 10->1, 01->0
+                dec[mc_bit / 8] |= (c0 << (7 - (mc_bit % 8)));
               }
               if (!valid_mc) continue;
 
-              // all-zero or all-FF: skip
               if (dec[0] == 0xFF && dec[1] == 0xFF && dec[2] == 0xFF) continue;
               if (!dec[0] && !dec[1] && !dec[2] && !dec[3]) continue;
 
-              // checksum: sum of bytes 0-8 == byte 9
               uint8_t chk = 0;
               for (int i = 0; i < 9; i++) chk += dec[i];
               if (chk != dec[9]) continue;
@@ -241,9 +249,10 @@ cc1101:
                 }
               }
               if (!matched) {
-                ESP_LOGI("tpms", "ID=%06X [unknown] pressure=%.1f psi temp=%.1f C (raw: P=%u T=%u)",
-                         sensor_id, pressure_psi, temp_c, dec[7], dec[8]);
+                ESP_LOGI("tpms", "ID=%06X [unknown] pressure=%.1f psi temp=%.1f C (raw: P=%u T=%u off=%d)",
+                         sensor_id, pressure_psi, temp_c, dec[7], dec[8], offset);
               }
+              break; // decoded successfully, don't try other offsets
             }
 
 # ============================================================
