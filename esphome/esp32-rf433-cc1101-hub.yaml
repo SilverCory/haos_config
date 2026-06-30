@@ -254,8 +254,10 @@ cc1101:
 
 remote_receiver:
   id: doorbell_receiver
-  pin: GPIO33
-  dump: raw  # DEBUG: revert to "rc_switch" once confirmed working
+  pin:
+    number: GPIO25
+    allow_other_uses: true
+  dump: raw  # DEBUG: temporarily on GPIO25 to verify RMT pulse output during TX
 
 # Transmits to your internal doorbell chimes.
 # GPIO25 drives GDO0 exclusively for TX (no pin sharing needed).
