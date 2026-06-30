@@ -378,6 +378,12 @@ button:
                 ESP_LOGI("doorbell", "Transmitter is_failed=%d", id(doorbell_transmitter)->is_failed());
             - cc1101.begin_tx:
                 id: doorbell_radio
+            - lambda: |-
+                // begin_tx() calls pin_mode(FLAG_OUTPUT) which resets the GPIO25
+                // IO_MUX to plain software GPIO, disconnecting the RMT peripheral.
+                // Re-enable the RMT TX channel to re-route it through the GPIO matrix.
+                rmt_disable(id(doorbell_transmitter)->channel_);
+                rmt_enable(id(doorbell_transmitter)->channel_);
             - delay: 2ms
             # Transmits the captured signal from the physical doorbell button.
             # Source: raw dump captured on GPIO25/GDO0 via CC1101 RX (dump: raw).
