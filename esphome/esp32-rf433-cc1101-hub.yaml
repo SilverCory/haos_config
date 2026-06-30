@@ -150,7 +150,7 @@ cc1101:
     filter_bandwidth: 203kHz
     rx_attenuation: 0dB
     packet_mode: true
-    packet_length: 20
+    packet_length: 30
     sync_mode: None
     num_preamble: 0
     on_packet:
