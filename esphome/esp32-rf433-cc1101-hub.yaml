@@ -215,13 +215,16 @@ cc1101:
             }
             if (sync_pair < 0) return;  // no sync found
 
-            // ---- Midpoint sampling: odd chips after sync ----
-            // Chip at (sync_pair + 2) is the first data chip.
-            // Sample every second chip starting at +1 (the midpoint).
-            // This gives one bit per Manchester bit period, violation-free.
-            // Bit value: midpoint chip directly = the high-first half level
-            // which maps: mid=1 -> bit 1 (chip pair 10), mid=0 -> bit 0 (chip pair 01).
-            int data_start = sync_pair + 2 + 1;  // +2 skip violation pair, +1 for midpoint
+            // ---- Midpoint sampling: even chips after sync ----
+            // The violation pair is at sync_pair. Skip it (+2) to land on the
+            // first chip of the first data pair. Then sample every second chip
+            // (i.e. the FIRST chip of each Manchester pair), stepping by 2.
+            // This sensor uses inverted Manchester polarity: 01=bit1, 10=bit0,
+            // so the first chip of each pair equals the decoded bit value directly.
+            // Assumption: the CC1101 frame always arrives on an even chip boundary
+            // (preamble starts at chip 0 of the first byte). If frames are
+            // occasionally missed silently, try phase 1 (data_start + 1).
+            int data_start = sync_pair + 2;  // first chip of first data pair
 
             // Collect midpoint bits into a searchable buffer (up to 64 bits)
             uint8_t mid_bits[64] = {};
