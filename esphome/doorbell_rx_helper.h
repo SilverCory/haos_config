@@ -48,13 +48,18 @@ class DoorbellCC1101Helper : public esphome::cc1101::CC1101Component {
 // GPIO must already be configured as output before calling.
 //
 // Pulse timings are in microseconds. Positive = carrier ON, negative = carrier OFF.
-// Runs inside a FreeRTOS critical section to avoid scheduler jitter.
+//
+// Each repeat is bit-banged inside a FreeRTOS critical section (spinlock) to
+// prevent the scheduler from preempting mid-pulse. The critical section is
+// released between repeats so the watchdog is fed and WiFi/BT tasks can run.
+static portMUX_TYPE doorbell_mux = portMUX_INITIALIZER_UNLOCKED;
+
 static void IRAM_ATTR doorbell_bitbang_ook(uint8_t gpio_num,
                                            const int32_t *pulses, size_t len,
                                            uint32_t repeat_times,
                                            uint32_t inter_repeat_us) {
-  portDISABLE_INTERRUPTS();
   for (uint32_t t = 0; t < repeat_times; t++) {
+    taskENTER_CRITICAL(&doorbell_mux);
     for (size_t i = 0; i < len; i++) {
       int32_t v = pulses[i];
       if (v > 0) {
@@ -65,11 +70,11 @@ static void IRAM_ATTR doorbell_bitbang_ook(uint8_t gpio_num,
         ets_delay_us((uint32_t)(-v));
       }
     }
-    // inter-repeat gap (pin low)
     gpio_set_level((gpio_num_t)gpio_num, 0);
+    taskEXIT_CRITICAL(&doorbell_mux);
+    // Inter-repeat gap outside the critical section — watchdog can run here.
     if (t + 1 < repeat_times && inter_repeat_us > 0)
       ets_delay_us(inter_repeat_us);
   }
   gpio_set_level((gpio_num_t)gpio_num, 0);
-  portENABLE_INTERRUPTS();
 }
