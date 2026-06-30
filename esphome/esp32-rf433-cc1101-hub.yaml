@@ -134,6 +134,9 @@ cc1101:
   - id: doorbell_radio
     spi_id: cc1101_spi
     cs_pin: GPIO26
+    gdo0_pin:
+      number: GPIO25
+      allow_other_uses: true
     frequency: 433.92MHz
     modulation_type: ASK/OOK
 
@@ -256,7 +259,9 @@ remote_receiver:
 # GPIO25 drives GDO0 exclusively for TX (no pin sharing needed).
 remote_transmitter:
   id: doorbell_transmitter
-  pin: GPIO25
+  pin:
+    number: GPIO25
+    allow_other_uses: true
   carrier_duty_percent: 100%
   non_blocking: false
 
@@ -378,7 +383,7 @@ button:
             # Source: raw dump captured on GPIO25/GDO0 via CC1101 RX (dump: raw).
             - remote_transmitter.transmit_raw:
                 code:
-                  [577, -185, 571, -177, 579, -173, 582, -207, 193, -560, 185, -545, 196, -561, 567, -207, 560, -188, 219, -544, 173, -578, 195, -551, 585, -193, 578, -191, 184, -576, 587, -185, 194, -552, 198, -565, 171, -578, 194, -555, 571, -214, 573, -176, 199, -5800]
+                  [571, -220, 168, -560, 559, -194, 551, -237, 533, -212, 571, -197, 169, -586, 171, -577, 170, -576, 559, -213, 564, -182, 184, -580, 181, -553, 184, -578, 557, -197, 583, -172, 186, -603, 541, -207, 166, -579, 177, -576, 172, -579, 171, -574, 559, -212, 558, -205, 180, -5780]
                 repeat:
                   times: 20
                   wait_time: 0ms
