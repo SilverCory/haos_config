@@ -58,7 +58,6 @@ esp32:
   framework:
     type: esp-idf
 logger:
-  level: VERBOSE
 
 api:
   encryption:
