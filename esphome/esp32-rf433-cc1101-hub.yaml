@@ -152,7 +152,7 @@ cc1101:
     packet_mode: true
     packet_length: 64
     sync_mode: None
-    num_preamble: 4
+    num_preamble: 2
     on_packet:
       then:
         - lambda: |-
