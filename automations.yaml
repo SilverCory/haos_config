@@ -534,11 +534,14 @@
   - trigger: state
     entity_id:
     - event.front_garden_doorbell_doorbell
+    attribute: event_type
+    to:
+    - ring
   conditions: []
   actions:
-  - device_id: 8d560188afeac61248c66c843b35dd7d
+  - device_id: 6e51c95c640f47c16b2b3daebe7d5b61
     domain: button
-    entity_id: 658892530830aa461d621f5560e9fa93
+    entity_id: 59d57fcc17a96f61741e657ac472d2b8
     type: press
   mode: single
 - id: '1766105074050'
