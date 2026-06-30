@@ -144,10 +144,9 @@ cc1101:
     cs_pin: GPIO14
     gdo0_pin: GPIO27
     frequency: 433.92MHz
-    modulation_type: 2-FSK
+    modulation_type: ASK/OOK
     manchester: false
-    symbol_rate: 9600
-    fsk_deviation: 38kHz 
+    symbol_rate: 4096 
     filter_bandwidth: 203kHz
     rx_attenuation: 0dB
     packet_mode: true
