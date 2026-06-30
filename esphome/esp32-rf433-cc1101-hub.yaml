@@ -421,6 +421,10 @@ button:
                                      sizeof(pulses) / sizeof(pulses[0]),
                                      20, 5780);
 
+                // Step 5: Return CC1101 to RX mode WITHOUT calling pin_mode(FLAG_INPUT).
+                // begin_rx() calls pin_mode(FLAG_INPUT) which disables the GPIO25
+                // output driver, so gpio_set_level() silently does nothing on the
+                // next TX cycle. pub_enter_rx() skips that call.
+                DoorbellCC1101Helper::pub_enter_rx(radio);
+
                 ESP_LOGI("doorbell", "Doorbell TX done");
-            - cc1101.begin_rx:
-                id: doorbell_radio
