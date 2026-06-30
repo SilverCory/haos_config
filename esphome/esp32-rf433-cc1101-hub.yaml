@@ -156,19 +156,6 @@ cc1101:
     on_packet:
       then:
         - lambda: |-
-            // ---- Raw hex dump of EVERY received packet ----
-            // This runs BEFORE any filtering so you can see all radio
-            // traffic, including packets that fail checksum or have an
-            // unexpected length.  Use this output to visually identify
-            // your sensor ID bytes when using a TPMS activation tool.
-            //
-            // Example output:
-            //   [tpms_raw] 10 bytes: AA BB CC DD 0A 1B 2C 64 48 XX
-            //   [tpms] ID=0A1B2C [Front Wheel] pressure=36.2 psi temp=20.0 C
-            //
-            // For packets that fail checksum or are the wrong length:
-            //   [tpms_raw] 7 bytes: AA BB CC 0A 1B 2C DD
-
             // ---- Raw hex dump (non-zero packets only) ----
             bool has_nonzero = false;
             for (size_t i = 1; i < x.size(); i++) { if (x[i]) { has_nonzero = true; break; } }
@@ -183,23 +170,16 @@ cc1101:
               ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
             }
 
-            // ---- Software Manchester decode ----
-            // At 8130 baud, each CC1101 bit = one Manchester chip (123µs/chip).
-            // 64 bytes = 512 chips. EG53MA4: 40-bit preamble (AA AA AA AA AA) + 80 data bits = 120 chips.
-            // Search for Manchester preamble (0xAA = 10101010) then decode 80 Manchester bits.
-            // Manchester zerobit: chip pair 10->1, 01->0.
-
+            // ---- Software Manchester decode for BMW R1200 K26 (48-bit payload) ----
             int nbits = (int)x.size() * 8;
             auto get_bit = [&](int i) -> int {
               if (i < 0 || i >= nbits) return 0;
               return (x[i / 8] >> (7 - (i % 8))) & 1;
             };
 
-            // Find last run of at least 8 consecutive alternating bits (preamble)
-            // then try Manchester decode starting from that point (both chip-phases)
             bool decoded_ok = false;
-            for (int start = 0; start <= nbits - 160 && !decoded_ok; start++) {
-              // Check at least 8 alternating chips from 'start'
+            for (int start = 0; start <= nbits - 96 && !decoded_ok; start++) {
+              // Check for at least 8 alternating chips
               bool is_preamble = true;
               for (int k = 0; k < 8; k++) {
                 if (get_bit(start + k) != (1 - (k & 1))) { is_preamble = false; break; }
@@ -209,33 +189,41 @@ cc1101:
               // Skip to end of preamble run
               int pos = start;
               while (pos + 1 < nbits && get_bit(pos) != get_bit(pos + 1)) pos++;
-              // pos now at last alternating chip; data starts at pos+1 (next chip pair)
-              // Try both phases
+
               for (int phase = 0; phase <= 1 && !decoded_ok; phase++) {
                 int dstart = pos + 1 + phase;
-                if (dstart + 160 > nbits) break;
+                if (dstart + 96 > nbits) break; // BMW sends 48 data bits (96 chips)
 
-                uint8_t dec[10] = {};
+                uint8_t dec[6] = {};
                 bool valid = true;
-                for (int b = 0; b < 80; b++) {
+                for (int b = 0; b < 48; b++) {
                   int p = dstart + b * 2;
                   int c0 = get_bit(p), c1 = get_bit(p + 1);
-                  if (c0 == c1) { valid = false; break; }
+                  if (c0 == c1) { valid = false; break; } // Invalid Manchester chip
                   dec[b / 8] |= (c0 << (7 - (b % 8)));
                 }
+                
                 if (!valid) continue;
-                if (dec[0] == 0xFF && dec[1] == 0xFF && dec[2] == 0xFF) continue;
-                if (!dec[0] && !dec[1] && !dec[2] && !dec[3]) continue;
-
-                uint8_t chk = 0;
-                for (int i = 0; i < 9; i++) chk += dec[i];
-                if (chk != dec[9]) continue;
+                if (!dec[0] && !dec[1] && !dec[2]) continue;
 
                 decoded_ok = true;
-                uint32_t sensor_id = ((uint32_t)dec[4] << 16) | ((uint32_t)dec[5] << 8) | dec[6];
-                float pressure_kpa = dec[7] * 2.5f;
-                float pressure_psi = pressure_kpa * 0.145038f;
-                float temp_c = ((float)dec[8] - 32.0f) * 5.0f / 9.0f;
+
+                // Load the 6 bytes into a 64-bit int for bitwise extraction
+                uint64_t payload = 0;
+                for (int i = 0; i < 6; i++) {
+                  payload = (payload << 8) | dec[i];
+                }
+
+                // BMW Motorrad OOK Layout Extraction
+                uint32_t sensor_id = (payload >> 21) & 0xFFFFFF; 
+                uint16_t pressure_raw = (payload >> 11) & 0x3FF;
+                uint8_t temp_raw = payload & 0xFF;
+
+                // Apply baseline pressure conversion (tune the multiplier to your physical readings)
+                float pressure_psi = pressure_raw * 0.363f; 
+
+                // Passing raw temperature byte - apply your own offset once baselined
+                float temp_c = temp_raw;
 
                 struct TpmsSensor {
                   uint32_t sensor_id;
@@ -243,6 +231,7 @@ cc1101:
                   sensor::Sensor* pressure;
                   sensor::Sensor* temperature;
                 };
+                
                 const TpmsSensor sensors[] = {
                   {0x2242BA, "Front Wheel", id(tpms_front_pressure),  id(tpms_front_temperature)},
                   {0x2242E1, "Rear Wheel",  id(tpms_rear_pressure),   id(tpms_rear_temperature)},
@@ -253,15 +242,15 @@ cc1101:
                   if (sensor_id == s.sensor_id) {
                     s.pressure->publish_state(pressure_psi);
                     s.temperature->publish_state(temp_c);
-                    ESP_LOGI("tpms", "ID=%06X [%s] pressure=%.1f psi temp=%.1f C",
+                    ESP_LOGI("tpms", "BMW ID=%06X [%s] pressure=%.1f psi temp_raw=%.1f",
                              sensor_id, s.name, pressure_psi, temp_c);
                     matched = true;
                     break;
                   }
                 }
                 if (!matched) {
-                  ESP_LOGI("tpms", "ID=%06X [unknown] pressure=%.1f psi temp=%.1f C (raw P=%u T=%u)",
-                           sensor_id, pressure_psi, temp_c, dec[7], dec[8]);
+                  ESP_LOGI("tpms", "BMW ID=%06X [unknown] pressure=%.1f psi temp_raw=%.1f (Raw Payload: %02X %02X %02X %02X %02X %02X)",
+                           sensor_id, pressure_psi, temp_c, dec[0], dec[1], dec[2], dec[3], dec[4], dec[5]);
                 }
               }
             }
