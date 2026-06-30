@@ -169,15 +169,19 @@ cc1101:
             // For packets that fail checksum or are the wrong length:
             //   [tpms_raw] 7 bytes: AA BB CC 0A 1B 2C DD
 
-            // ---- Raw hex dump ----
-            char hex[65];
-            int hpos = 0;
-            for (size_t i = 0; i < x.size() && hpos < (int)sizeof(hex) - 4; i++) {
-              if (i > 0) hex[hpos++] = ' ';
-              hpos += snprintf(hex + hpos, sizeof(hex) - hpos, "%02X", x[i]);
+            // ---- Raw hex dump (non-zero packets only) ----
+            bool has_nonzero = false;
+            for (size_t i = 1; i < x.size(); i++) { if (x[i]) { has_nonzero = true; break; } }
+            if (has_nonzero) {
+              char hex[200];
+              int hpos = 0;
+              for (size_t i = 0; i < x.size() && hpos < (int)sizeof(hex) - 4; i++) {
+                if (i > 0) hex[hpos++] = ' ';
+                hpos += snprintf(hex + hpos, sizeof(hex) - hpos, "%02X", x[i]);
+              }
+              hex[hpos] = '\0';
+              ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
             }
-            hex[hpos] = '\0';
-            ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
 
             // ---- Software Manchester decode ----
             // At 4159 baud, each CC1101 bit = one Manchester chip (123µs/chip).
