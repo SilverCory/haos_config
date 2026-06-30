@@ -260,15 +260,15 @@ cc1101:
               for (int b = 0; b < 8; b++)
                 t_byte = (t_byte << 1) | mid_bits[off + 32 + b];
 
-              float pressure_kpa = (float)p_raw + 100.0f;
-              float pressure_psi = pressure_kpa * 0.145038f;
-              float temp_c       = (float)(t_byte & 0x7F) - 60.0f;
-              int   status_flag  = (t_byte >> 7) & 1;
+              float pressure_kpa  = (float)p_raw + 100.0f;
+              float pressure_psig = (pressure_kpa - 101.325f) * 0.145038f;
+              float temp_c        = (float)(t_byte & 0x7F) - 60.0f;
+              int   status_flag   = (t_byte >> 7) & 1;
 
-              KNOWN_PRESSURE[match]->publish_state(pressure_psi);
+              KNOWN_PRESSURE[match]->publish_state(pressure_psig);
               KNOWN_TEMP[match]->publish_state(temp_c);
-              ESP_LOGI("tpms", "ID=%06" PRIX32 " [%s] %.1f psi %.1f C flag=%d (raw P=%u T=%u)",
-                       cid, KNOWN_NAMES[match], pressure_psi, temp_c, status_flag, p_raw, t_byte);
+              ESP_LOGI("tpms", "ID=%06" PRIX32 " [%s] %.1f psig %.1f C flag=%d (raw P=%u T=%u)",
+                       cid, KNOWN_NAMES[match], pressure_psig, temp_c, status_flag, p_raw, t_byte);
               return;  // done, only one sensor per packet
             }
 
@@ -327,7 +327,7 @@ sensor:
   - platform: template
     name: "TPMS Front Wheel Pressure"
     id: tpms_front_pressure
-    unit_of_measurement: "psi"
+    unit_of_measurement: "psi"  # gauge (psig)
     device_class: pressure
     accuracy_decimals: 1
     state_class: measurement
@@ -344,7 +344,7 @@ sensor:
   - platform: template
     name: "TPMS Rear Wheel Pressure"
     id: tpms_rear_pressure
-    unit_of_measurement: "psi"
+    unit_of_measurement: "psi"  # gauge (psig)
     device_class: pressure
     accuracy_decimals: 1
     state_class: measurement
