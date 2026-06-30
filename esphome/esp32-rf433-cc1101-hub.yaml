@@ -146,7 +146,7 @@ cc1101:
     frequency: 433.92MHz
     modulation_type: ASK/OOK
     manchester: false
-    symbol_rate: 4159
+    symbol_rate: 8130
     filter_bandwidth: 203kHz
     rx_attenuation: 0dB
     packet_mode: true
