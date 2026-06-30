@@ -376,7 +376,7 @@ button:
             # Transmits the captured signal from the physical doorbell button.
             # Source: raw dump captured on GPIO25/GDO0 via CC1101 RX (dump: raw).
             - remote_transmitter.transmit_raw:
-                carrier_frequency: 433920Hz
+                carrier_frequency: 0Hz
                 code:
                   [577, -185, 571, -177, 579, -173, 582, -207, 193, -560, 185, -545, 196, -561, 567, -207, 560, -188, 219, -544, 173, -578, 195, -551, 585, -193, 578, -191, 184, -576, 587, -185, 194, -552, 198, -565, 171, -578, 194, -555, 571, -214, 573, -176, 199, -5800]
                 repeat:
