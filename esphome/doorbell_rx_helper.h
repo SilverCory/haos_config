@@ -31,6 +31,16 @@ class DoorbellCC1101Helper : public esphome::cc1101::CC1101Component {
   static bool pub_enter_tx(esphome::cc1101::CC1101Component *comp) {
     return static_cast<DoorbellCC1101Helper *>(comp)->enter_tx_();
   }
+
+  // Enter RX state WITHOUT calling pin_mode(FLAG_INPUT).
+  // begin_rx() calls pin_mode(FLAG_INPUT) which disables the GPIO output
+  // driver, preventing gpio_set_level() from working on subsequent TX cycles.
+  // This version skips that call so the pin state is managed by the caller.
+  static bool pub_enter_rx(esphome::cc1101::CC1101Component *comp) {
+    auto *self = static_cast<DoorbellCC1101Helper *>(comp);
+    self->enter_idle_();
+    return self->enter_rx_();
+  }
 };
 
 // Bit-bang the doorbell OOK signal on gpio_num.
