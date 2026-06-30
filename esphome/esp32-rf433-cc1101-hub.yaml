@@ -283,7 +283,7 @@ cc1101:
               hpos += snprintf(hex + hpos, sizeof(hex) - hpos, "%02X", x[i]);
             }
             hex[hpos] = '\0';
-            ESP_LOGD("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
+            ESP_LOGV("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
 
 # ============================================================
 # Doorbell Remote Receiver
@@ -408,7 +408,6 @@ button:
             switch.is_off: doorbell_lock
           then:
             - switch.turn_on: doorbell_lock
-            - logger.log: "Doorbell TX starting"
             - lambda: |-
                 // Bit-bang OOK doorbell signal directly on GPIO25 (GDO0).
                 //
@@ -472,4 +471,4 @@ button:
                 // next TX cycle. pub_enter_rx() skips that call.
                 DoorbellCC1101Helper::pub_enter_rx(radio);
 
-                ESP_LOGI("doorbell", "Doorbell TX done");
+                ESP_LOGI("doorbell", "TX done");
