@@ -143,14 +143,14 @@ cc1101:
     spi_id: cc1101_spi
     cs_pin: GPIO14
     gdo0_pin: GPIO27
-    frequency: 434.42MHz  # BMW 8532731 may use 434.42MHz; revert to 433.92MHz if no joy
+    frequency: 433.92MHz
     modulation_type: ASK/OOK
-    manchester: true
+    manchester: false
     symbol_rate: 4800
-    filter_bandwidth: 203kHz  # Wide to catch frequency offset; narrow back to 58kHz once confirmed
+    filter_bandwidth: 203kHz
     rx_attenuation: 0dB
     packet_mode: true
-    packet_length: 10
+    packet_length: 20
     sync_mode: None
     num_preamble: 0
     on_packet:
@@ -169,8 +169,7 @@ cc1101:
             // For packets that fail checksum or are the wrong length:
             //   [tpms_raw] 7 bytes: AA BB CC 0A 1B 2C DD
 
-            // Suppress all-0xFF noise packets before logging
-            if (x.size() >= 3 && x[0] == 0xFF && x[1] == 0xFF && x[2] == 0xFF) return;
+            // all-FF filter disabled for debugging
 
             char hex[200];
             int pos = 0;
