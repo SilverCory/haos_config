@@ -145,12 +145,12 @@ cc1101:
     gdo0_pin: GPIO27
     frequency: 433.92MHz
     modulation_type: ASK/OOK
-    manchester: true
-    symbol_rate: 4159
+    manchester: false
+    symbol_rate: 8621
     filter_bandwidth: 58kHz
     rx_attenuation: 0dB
     packet_mode: true
-    packet_length: 10
+    packet_length: 20
     sync_mode: None
     num_preamble: 4
     on_packet:
@@ -169,78 +169,81 @@ cc1101:
             // For packets that fail checksum or are the wrong length:
             //   [tpms_raw] 7 bytes: AA BB CC 0A 1B 2C DD
 
-            char hex[60];
-            int pos = 0;
-            for (size_t i = 0; i < x.size() && pos < (int)sizeof(hex) - 4; i++) {
-              if (i > 0) hex[pos++] = ' ';
-              pos += snprintf(hex + pos, sizeof(hex) - pos, "%02X", x[i]);
+            // ---- Raw hex dump ----
+            char hex[65];
+            int hpos = 0;
+            for (size_t i = 0; i < x.size() && hpos < (int)sizeof(hex) - 4; i++) {
+              if (i > 0) hex[hpos++] = ' ';
+              hpos += snprintf(hex + hpos, sizeof(hex) - hpos, "%02X", x[i]);
             }
-            hex[pos] = '\0';
+            hex[hpos] = '\0';
             ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
 
-            // ---- Schrader EG53MA4 TPMS decoder ----
-            // CC1101 with manchester:true delivers 10 Manchester-decoded bytes.
-            // Layout: b[0]-b[3]=flags, b[4]-b[6]=ID(24-bit), b[7]=pressure, b[8]=temp_F, b[9]=checksum
+            // ---- Software Manchester decode ----
+            // Raw OOK chips at 8621 baud, Manchester encoding: 10=1, 01=0 (zerobit convention)
+            // Try both bit offsets (0 and 1) since CC1101 may latch mid-chip.
+            // A valid EG53MA4 frame is 10 bytes after Manchester decode.
+            // Layout: b[0..3]=flags, b[4..6]=ID(24-bit), b[7]=pressure, b[8]=temp_F, b[9]=checksum
 
-            // Filter all-0xFF packets (Manchester all-ones noise)
-            if (x[0] == 0xFF && x[1] == 0xFF && x[2] == 0xFF) return;
-
-            // Validate checksum: sum of bytes 0-8 must equal byte 9
-            uint8_t chk = 0;
-            for (int i = 0; i < 9; i++) chk += x[i];
-            if (chk != x[9]) return;  // checksum mismatch -- already logged as raw above
-
-            // Extract sensor ID (24-bit big-endian from bytes 4-6)
-            uint32_t sensor_id = ((uint32_t)x[4] << 16) | ((uint32_t)x[5] << 8) | x[6];
-
-            // Extract pressure: each unit = 25 mbar = 2.5 kPa
-            float pressure_kpa = x[7] * 2.5f;
-            float pressure_psi = pressure_kpa * 0.145038f;
-
-            // Extract temperature: raw value is degrees Fahrenheit
-            float temp_f = (float)x[8];
-            float temp_c = (temp_f - 32.0f) * 5.0f / 9.0f;
-
-            // ---- Sensor dispatch table ----
-            // Each entry maps a 24-bit sensor ID to a human-readable name
-            // and its corresponding pressure + temperature ESPHome sensors.
-            //
-            // To add a new TPMS sensor:
-            //   1. Add a template sensor pair in the 'sensor:' section below
-            //      (copy an existing pair and change name + id)
-            //   2. Add a row to this table with the sensor's hex ID,
-            //      a display name, and id() references to the new sensors
-            //   3. Flash the updated firmware
-            //
-            // The IDs below are placeholders. To discover your real IDs:
-            //   1. Use a TPMS activation tool to wake the Schrader EG53MA4
-            //   2. Watch the ESPHome log for [tpms] entries
-            //   3. The log shows ID=XXXXXX -- replace the placeholder below
-            struct TpmsSensor {
-              uint32_t sensor_id;
-              const char* name;
-              sensor::Sensor* pressure;
-              sensor::Sensor* temperature;
-            };
-            const TpmsSensor sensors[] = {
-              {0x2242BA, "Front Wheel",   id(tpms_front_pressure),  id(tpms_front_temperature)},
-              {0x2242E1, "Rear Wheel",    id(tpms_rear_pressure),   id(tpms_rear_temperature)},
+            // Pack all 20 raw bytes into a 160-bit stream for easy bit access
+            auto get_bit = [&](int i) -> int {
+              return (x[i / 8] >> (7 - (i % 8))) & 1;
             };
 
-            bool matched = false;
-            for (const auto& s : sensors) {
-              if (sensor_id == s.sensor_id) {
-                s.pressure->publish_state(pressure_psi);
-                s.temperature->publish_state(temp_c);
-                ESP_LOGI("tpms", "ID=%06X [%s] pressure=%.1f psi temp=%.1f C (raw: P=%u T=%u)",
-                         sensor_id, s.name, pressure_psi, temp_c, x[7], x[8]);
-                matched = true;
-                break;
+            for (int offset = 0; offset <= 1; offset++) {
+              uint8_t dec[10] = {};
+              bool valid_mc = true;
+              for (int b = 0; b < 10 * 8; b++) {
+                int chip_pos = offset + b * 2;
+                if (chip_pos + 1 >= 160) { valid_mc = false; break; }
+                int c0 = get_bit(chip_pos);
+                int c1 = get_bit(chip_pos + 1);
+                if (c0 == c1) { valid_mc = false; break; } // not valid Manchester
+                int bit = c0; // 10->1, 01->0 (Manchester zerobit)
+                dec[b / 8] |= (bit << (7 - (b % 8)));
               }
-            }
-            if (!matched) {
-              ESP_LOGI("tpms", "ID=%06X [unknown] pressure=%.1f psi temp=%.1f C (raw: P=%u T=%u)",
-                       sensor_id, pressure_psi, temp_c, x[7], x[8]);
+              if (!valid_mc) continue;
+
+              // all-zero or all-FF: skip
+              if (dec[0] == 0xFF && dec[1] == 0xFF && dec[2] == 0xFF) continue;
+              if (!dec[0] && !dec[1] && !dec[2] && !dec[3]) continue;
+
+              // checksum: sum of bytes 0-8 == byte 9
+              uint8_t chk = 0;
+              for (int i = 0; i < 9; i++) chk += dec[i];
+              if (chk != dec[9]) continue;
+
+              uint32_t sensor_id = ((uint32_t)dec[4] << 16) | ((uint32_t)dec[5] << 8) | dec[6];
+              float pressure_kpa = dec[7] * 2.5f;
+              float pressure_psi = pressure_kpa * 0.145038f;
+              float temp_c = ((float)dec[8] - 32.0f) * 5.0f / 9.0f;
+
+              struct TpmsSensor {
+                uint32_t sensor_id;
+                const char* name;
+                sensor::Sensor* pressure;
+                sensor::Sensor* temperature;
+              };
+              const TpmsSensor sensors[] = {
+                {0x2242BA, "Front Wheel", id(tpms_front_pressure),  id(tpms_front_temperature)},
+                {0x2242E1, "Rear Wheel",  id(tpms_rear_pressure),   id(tpms_rear_temperature)},
+              };
+
+              bool matched = false;
+              for (const auto& s : sensors) {
+                if (sensor_id == s.sensor_id) {
+                  s.pressure->publish_state(pressure_psi);
+                  s.temperature->publish_state(temp_c);
+                  ESP_LOGI("tpms", "ID=%06X [%s] pressure=%.1f psi temp=%.1f C",
+                           sensor_id, s.name, pressure_psi, temp_c);
+                  matched = true;
+                  break;
+                }
+              }
+              if (!matched) {
+                ESP_LOGI("tpms", "ID=%06X [unknown] pressure=%.1f psi temp=%.1f C (raw: P=%u T=%u)",
+                         sensor_id, pressure_psi, temp_c, dec[7], dec[8]);
+              }
             }
 
 # ============================================================
