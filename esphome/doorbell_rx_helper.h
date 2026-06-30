@@ -2,7 +2,6 @@
 #include "esphome/components/remote_transmitter/remote_transmitter.h"
 #include "driver/rmt_tx.h"
 #include "soc/gpio_sig_map.h"
-#include "hal/gpio_hal.h"
 #include "esp_rom_gpio.h"
 
 // Subclass accessor to reach protected channel_ member of
@@ -11,20 +10,18 @@ class DoorbellTxHelper
     : public esphome::remote_transmitter::RemoteTransmitterComponent {
  public:
   // After cc1101.begin_tx() calls pin_mode(FLAG_OUTPUT), the GPIO IO_MUX is
-  // reset to plain software GPIO, breaking the RMT peripheral's GPIO matrix
-  // route. This function re-routes the RMT TX channel output back to the pin
-  // by calling esp_rom_gpio_connect_out_signal() with the channel's signal idx.
+  // reset to plain software GPIO, breaking the RMT TX peripheral's GPIO matrix
+  // route. Re-connect the RMT TX channel signal to the pin directly.
   static void reattach_rmt(
       esphome::remote_transmitter::RemoteTransmitterComponent *comp,
       uint8_t gpio_num) {
     auto *self = static_cast<DoorbellTxHelper *>(comp);
-    // Get the RMT TX channel number from the handle.
-    // On ESP32, rmt_channel_handle_t wraps a channel index 0-7.
-    // rmt_tx_get_channel_id() retrieves it portably on IDF 5.x.
-    int channel_id = 0;
-    rmt_tx_get_channel_id(self->channel_, &channel_id);
-    // RMT TX signal indices on ESP32: channel 0 = RMT_SIG_OUT0_IDX (87), etc.
-    uint32_t signal_idx = RMT_SIG_OUT0_IDX + channel_id;
-    esp_rom_gpio_connect_out_signal(gpio_num, signal_idx, false, false);
+    // On ESP32, RMT TX channel signal indices start at RMT_SIG_OUT0_IDX.
+    // The transmitter is the first RMT channel allocated, so channel_id = 0.
+    // esp_rom_gpio_connect_out_signal re-routes the peripheral signal through
+    // the GPIO matrix to the physical pin, overriding the plain GPIO mode
+    // that pin_mode(FLAG_OUTPUT) set.
+    (void)self;  // channel_ unused since we hardcode channel 0
+    esp_rom_gpio_connect_out_signal(gpio_num, RMT_SIG_OUT0_IDX, false, false);
   }
 };
