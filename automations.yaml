@@ -616,7 +616,7 @@
     entity_id:
     - sensor.front_garden_rfhub_tpms_front_wheel_pressure
     - sensor.front_garden_rfhub_tpms_rear_wheel_pressure
-    above: 1
+    above: 0.1
     below: 30
   conditions: []
   actions:
