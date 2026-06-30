@@ -45,8 +45,6 @@
 esphome:
   name: esp32-rf433-cc1101-hub
   friendly_name: esp32-rf433-cc1101-hub
-  includes:
-    - doorbell_rx_helper.h
   on_boot:
     priority: -100
     then:
@@ -136,9 +134,6 @@ cc1101:
   - id: doorbell_radio
     spi_id: cc1101_spi
     cs_pin: GPIO26
-    gdo0_pin:
-      number: GPIO25
-      allow_other_uses: true
     frequency: 433.92MHz
     modulation_type: ASK/OOK
 
@@ -254,19 +249,13 @@ cc1101:
 
 remote_receiver:
   id: doorbell_receiver
-  pin:
-    number: GPIO25
-    allow_other_uses: true
+  pin: GPIO33
   dump: raw  # DEBUG: revert to "rc_switch" once confirmed working
 
 # Transmits to your internal doorbell chimes.
-# carrier_duty_percent: 100% is correct for OOK RF transmission
-# (the carrier is fully on during a mark period, unlike IR which
-# typically uses 50% to generate a modulated carrier).
+# GPIO25 drives GDO0 exclusively for TX (no pin sharing needed).
 remote_transmitter:
-  pin:
-    number: GPIO25
-    allow_other_uses: true
+  pin: GPIO25
   carrier_duty_percent: 1%
 
 # ============================================================
@@ -383,16 +372,11 @@ button:
             # on GPIO25. The active RX channel prevents the TX channel from driving
             # the pin. Disabling the RX channel's GPIO interrupt and the RMT RX
             # peripheral allows the TX RMT channel to take over the pin.
-            # Disable the RMT RX channel before TX -- remote_receiver and
-            # remote_transmitter both use the RMT peripheral on GPIO25. The
-            # active RX channel prevents the TX channel from driving the pin.
-            - lambda: |-
-                DoorbellRxHelper::pause_rx(id(doorbell_receiver));
             - cc1101.begin_tx:
                 id: doorbell_radio
             - delay: 2ms
             # Transmits the captured signal from the physical doorbell button.
-            # Source: raw dump captured on GPIO25 via CC1101 RX (dump: raw).
+            # Source: raw dump captured on GPIO25/GDO0 via CC1101 RX (dump: raw).
             - remote_transmitter.transmit_raw:
                 code:
                   [577, -185, 571, -177, 579, -173, 582, -207, 193, -560, 185, -545, 196, -561, 567, -207, 560, -188, 219, -544, 173, -578, 195, -551, 585, -193, 578, -191, 184, -576, 587, -185, 194, -552, 198, -565, 171, -578, 194, -555, 571, -214, 573, -176, 199, -5800]
@@ -402,6 +386,3 @@ button:
             - logger.log: "Doorbell TX done"
             - cc1101.begin_rx:
                 id: doorbell_radio
-            # Re-enable the RMT RX channel after TX completes.
-            - lambda: |-
-                DoorbellRxHelper::resume_rx(id(doorbell_receiver));
