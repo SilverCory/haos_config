@@ -144,10 +144,10 @@ cc1101:
     cs_pin: GPIO14
     gdo0_pin: GPIO27
     frequency: 433.92MHz
-    modulation_type: ASK/OOK
+    modulation_type: 2-FSK
     manchester: false
-    # Test common legacy rates
-    symbol_rate: 9600 # Alternatively test 4096 or 4000
+    symbol_rate: 9600
+    fsk_deviation: 38kHz 
     filter_bandwidth: 203kHz
     rx_attenuation: 0dB
     packet_mode: true
