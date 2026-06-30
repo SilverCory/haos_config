@@ -110,21 +110,22 @@ spi:
 # The TPMS CC1101 is wired to CS=GPIO14, GDO0=GPIO27.
 # It uses packet_mode to receive raw Schrader EG53MA4 frames.
 #
-# Schrader EG53MA4 protocol (OOK + Manchester, 120 bits):
-#   40-bit preamble/sync + 80 data bits (10 bytes)
+# BMW R1200RT K26 Schrader EG53MA4 short frame (61 Manchester bits):
+#   ~15 bits preamble/sync + 24-bit sensor ID + 8-bit pressure + 8-bit temp
 #
-# Packet byte layout (b[0]-b[9]):
-#   b[0]-b[3]: flags (32-bit)
-#   b[4]-b[6]: sensor ID (24-bit big-endian)
-#   b[7]:      pressure in units of 25 mbar (pressure_kPa = b[7] * 2.5)
-#   b[8]:      temperature in raw deg F (temp_C = (b[8] - 32) * 5/9)
-#   b[9]:      checksum = sum(b[0..8]) & 0xFF
+# Manchester decoded frame layout (bits 19-58 after preamble):
+#   bits 19-42: sensor ID (24-bit big-endian)
+#   bits 43-50: pressure raw  -> pressure_kPa = raw + 100
+#   bits 51-58: temp byte     -> temp_C = (byte & 0x7F) - 60
+#                                status  = byte >> 7
 #
-# sync_mode is set to None because the exact 2-byte CC1101 sync
-# word for EG53MA4 is not definitively documented. All frame
-# validation is done by checksum in the on_packet lambda. This
-# means more noise packets are received, but all invalid ones
-# are discarded by the checksum check.
+# Known sensor IDs:
+#   0x2238FA = 2242810  front wheel
+#   0x223DE1 = 2244065  rear wheel
+#
+# sync_mode None: no CC1101 sync word filtering; the on_packet lambda
+# locates frames by searching for the sensor ID in the Manchester
+# midpoint-sampled bit stream.
 # ------------------------------------------------------------
 
 cc1101:
@@ -146,7 +147,7 @@ cc1101:
     frequency: 433.92MHz
     modulation_type: ASK/OOK
     manchester: false
-    symbol_rate: 4096 
+    symbol_rate: 8130
     filter_bandwidth: 203kHz
     rx_attenuation: 0dB
     packet_mode: true
@@ -156,104 +157,130 @@ cc1101:
     on_packet:
       then:
         - lambda: |-
-            // ---- Raw hex dump (non-zero packets only) ----
+            // ---- BMW R1200RT K26 Schrader EG53MA4 TPMS decoder ----
+            //
+            // Protocol (reverse-engineered from SDR + CC1101 captures):
+            //   OOK Manchester at 8130 chip/s (122.5µs/chip).
+            //   CC1101 captures raw chips at that rate.
+            //
+            // Frame structure (61 Manchester-decoded bits total):
+            //   Bits  0-18:  preamble + sync (15 ones + 3 zeros)
+            //   Bits 19-42:  sensor ID (24-bit big-endian)
+            //   Bits 43-50:  pressure raw byte
+            //   Bits 51-58:  temperature byte (bit7 = status flag, bits6-0 = raw temp)
+            //   Bits 59-60:  trailing (ignored)
+            //
+            // Decode:
+            //   pressure_kPa = pressure_raw + 100
+            //   temp_C       = (temp_byte & 0x7F) - 60
+            //   status_flag  = (temp_byte >> 7) & 1
+            //
+            // Known sensor IDs (BMW R1200RT K26):
+            //   0x2238FA = 2242810 (front wheel)
+            //   0x223DE1 = 2244065 (rear wheel)
+            //
+            // Decode algorithm:
+            //   1. Build chip bitstream from CC1101 packet bytes (MSB first).
+            //   2. Find the preamble-to-sync boundary: the first Manchester
+            //      violation (11 or 00 chip pair) after a run of valid pairs.
+            //   3. After the violation, sample ODD chips (midpoint sampling)
+            //      to extract data bits without pair-alignment ambiguity.
+            //   4. Search for the 24-bit sensor ID in the midpoint bit stream.
+            //   5. The two bytes immediately following the ID are pressure and temp.
+
+            // ---- Raw hex dump (non-zero packets only, for diagnostics) ----
             bool has_nonzero = false;
             for (size_t i = 1; i < x.size(); i++) { if (x[i]) { has_nonzero = true; break; } }
-            if (has_nonzero) {
-              char hex[256];
-              int hpos = 0;
-              for (size_t i = 0; i < x.size() && hpos < (int)sizeof(hex) - 4; i++) {
-                if (i > 0) hex[hpos++] = ' ';
-                hpos += snprintf(hex + hpos, sizeof(hex) - hpos, "%02X", x[i]);
-              }
-              hex[hpos] = '\0';
-              ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
-            }
+            if (!has_nonzero) return;
 
-            // ---- Software Manchester decode for BMW R1200 K26 (48-bit payload) ----
+            // ---- Build chip bitstream ----
             int nbits = (int)x.size() * 8;
-            auto get_bit = [&](int i) -> int {
+            auto get_chip = [&](int i) -> int {
               if (i < 0 || i >= nbits) return 0;
               return (x[i / 8] >> (7 - (i % 8))) & 1;
             };
 
-            bool decoded_ok = false;
-            for (int start = 0; start <= nbits - 96 && !decoded_ok; start++) {
-              // Check for at least 8 alternating chips
-              bool is_preamble = true;
-              for (int k = 0; k < 8; k++) {
-                if (get_bit(start + k) != (1 - (k & 1))) { is_preamble = false; break; }
-              }
-              if (!is_preamble) continue;
-
-              // Skip to end of preamble run
-              int pos = start;
-              while (pos + 1 < nbits && get_bit(pos) != get_bit(pos + 1)) pos++;
-
-              for (int phase = 0; phase <= 1 && !decoded_ok; phase++) {
-                int dstart = pos + 1 + phase;
-                if (dstart + 96 > nbits) break; // BMW sends 48 data bits (96 chips)
-
-                uint8_t dec[6] = {};
-                bool valid = true;
-                for (int b = 0; b < 48; b++) {
-                  int p = dstart + b * 2;
-                  int c0 = get_bit(p), c1 = get_bit(p + 1);
-                  if (c0 == c1) { valid = false; break; } // Invalid Manchester chip
-                  dec[b / 8] |= (c0 << (7 - (b % 8)));
-                }
-                
-                if (!valid) continue;
-                if (!dec[0] && !dec[1] && !dec[2]) continue;
-
-                decoded_ok = true;
-
-                // Load the 6 bytes into a 64-bit int for bitwise extraction
-                uint64_t payload = 0;
-                for (int i = 0; i < 6; i++) {
-                  payload = (payload << 8) | dec[i];
-                }
-
-                // BMW Motorrad OOK Layout Extraction
-                uint32_t sensor_id = (payload >> 21) & 0xFFFFFF; 
-                uint16_t pressure_raw = (payload >> 11) & 0x3FF;
-                uint8_t temp_raw = payload & 0xFF;
-
-                // Apply baseline pressure conversion (tune the multiplier to your physical readings)
-                float pressure_psi = pressure_raw * 0.363f; 
-
-                // Passing raw temperature byte - apply your own offset once baselined
-                float temp_c = temp_raw;
-
-                struct TpmsSensor {
-                  uint32_t sensor_id;
-                  const char* name;
-                  sensor::Sensor* pressure;
-                  sensor::Sensor* temperature;
-                };
-                
-                const TpmsSensor sensors[] = {
-                  {0x2242BA, "Front Wheel", id(tpms_front_pressure),  id(tpms_front_temperature)},
-                  {0x2242E1, "Rear Wheel",  id(tpms_rear_pressure),   id(tpms_rear_temperature)},
-                };
-
-                bool matched = false;
-                for (const auto& s : sensors) {
-                  if (sensor_id == s.sensor_id) {
-                    s.pressure->publish_state(pressure_psi);
-                    s.temperature->publish_state(temp_c);
-                    ESP_LOGI("tpms", "BMW ID=%06X [%s] pressure=%.1f psi temp_raw=%.1f",
-                             sensor_id, s.name, pressure_psi, temp_c);
-                    matched = true;
-                    break;
-                  }
-                }
-                if (!matched) {
-                  ESP_LOGI("tpms", "BMW ID=%06X [unknown] pressure=%.1f psi temp_raw=%.1f (Raw Payload: %02X %02X %02X %02X %02X %02X)",
-                           sensor_id, pressure_psi, temp_c, dec[0], dec[1], dec[2], dec[3], dec[4], dec[5]);
-                }
+            // ---- Find sync boundary: first violation after valid preamble ----
+            // A violation = two consecutive chips with the same level (11 or 00).
+            int sync_pair = -1;
+            int valid_run = 0;
+            for (int i = 0; i + 1 < nbits; i += 2) {
+              int c0 = get_chip(i), c1 = get_chip(i + 1);
+              if (c0 != c1) {
+                valid_run++;
+              } else {
+                if (valid_run >= 4) { sync_pair = i; break; }
+                valid_run = 0;
               }
             }
+            if (sync_pair < 0) return;  // no sync found
+
+            // ---- Midpoint sampling: odd chips after sync ----
+            // Chip at (sync_pair + 2) is the first data chip.
+            // Sample every second chip starting at +1 (the midpoint).
+            // This gives one bit per Manchester bit period, violation-free.
+            // Bit value: midpoint chip directly = the high-first half level
+            // which maps: mid=1 -> bit 1 (chip pair 10), mid=0 -> bit 0 (chip pair 01).
+            int data_start = sync_pair + 2 + 1;  // +2 skip violation pair, +1 for midpoint
+
+            // Collect midpoint bits into a searchable buffer (up to 64 bits)
+            uint8_t mid_bits[64] = {};
+            int n_mid = 0;
+            for (int i = data_start; i < nbits && n_mid < 64; i += 2) {
+              mid_bits[n_mid++] = get_chip(i);
+            }
+
+            // ---- Search for 24-bit sensor ID in midpoint bits ----
+            // Try each starting offset 0..7 (the ID can land at any bit boundary).
+            const uint32_t KNOWN_IDS[] = { 0x2238FA, 0x223DE1 };
+            const char*    KNOWN_NAMES[] = { "Front Wheel", "Rear Wheel" };
+            sensor::Sensor* KNOWN_PRESSURE[] = { id(tpms_front_pressure), id(tpms_rear_pressure) };
+            sensor::Sensor* KNOWN_TEMP[]     = { id(tpms_front_temperature), id(tpms_rear_temperature) };
+
+            for (int off = 0; off + 40 <= n_mid; off++) {
+              // Assemble 24-bit candidate ID from mid_bits[off..off+23]
+              uint32_t cid = 0;
+              for (int b = 0; b < 24; b++)
+                cid = (cid << 1) | mid_bits[off + b];
+
+              // Check if it matches a known sensor
+              int match = -1;
+              for (int s = 0; s < 2; s++) {
+                if (cid == KNOWN_IDS[s]) { match = s; break; }
+              }
+              if (match < 0) continue;
+
+              // Extract pressure byte (bits off+24 .. off+31)
+              uint8_t p_raw = 0;
+              for (int b = 0; b < 8; b++)
+                p_raw = (p_raw << 1) | mid_bits[off + 24 + b];
+
+              // Extract temperature byte (bits off+32 .. off+39)
+              uint8_t t_byte = 0;
+              for (int b = 0; b < 8; b++)
+                t_byte = (t_byte << 1) | mid_bits[off + 32 + b];
+
+              float pressure_kpa = (float)p_raw + 100.0f;
+              float pressure_psi = pressure_kpa * 0.145038f;
+              float temp_c       = (float)(t_byte & 0x7F) - 60.0f;
+              int   status_flag  = (t_byte >> 7) & 1;
+
+              KNOWN_PRESSURE[match]->publish_state(pressure_psi);
+              KNOWN_TEMP[match]->publish_state(temp_c);
+              ESP_LOGI("tpms", "ID=%06" PRIX32 " [%s] %.1f psi %.1f C flag=%d (raw P=%u T=%u)",
+                       cid, KNOWN_NAMES[match], pressure_psi, temp_c, status_flag, p_raw, t_byte);
+              return;  // done, only one sensor per packet
+            }
+
+            // No known ID found — log raw hex for diagnostics
+            char hex[256];
+            int hpos = 0;
+            for (size_t i = 0; i < x.size() && hpos < (int)sizeof(hex) - 4; i++) {
+              if (i > 0) hex[hpos++] = ' ';
+              hpos += snprintf(hex + hpos, sizeof(hex) - hpos, "%02X", x[i]);
+            }
+            hex[hpos] = '\0';
+            ESP_LOGD("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
 
 # ============================================================
 # Doorbell Remote Receiver
@@ -296,7 +323,7 @@ remote_receiver:
 # ------------------------------------------------------------
 
 sensor:
-  # -- Front Wheel (ID: 0x2242BA / 2242810) --
+  # -- Front Wheel (ID: 0x2238FA / 2242810) --
   - platform: template
     name: "TPMS Front Wheel Pressure"
     id: tpms_front_pressure
@@ -313,7 +340,7 @@ sensor:
     accuracy_decimals: 1
     state_class: measurement
 
-  # -- Rear Wheel (ID: 0x2242E1 / 2244065) --
+  # -- Rear Wheel (ID: 0x223DE1 / 2244065) --
   - platform: template
     name: "TPMS Rear Wheel Pressure"
     id: tpms_rear_pressure
