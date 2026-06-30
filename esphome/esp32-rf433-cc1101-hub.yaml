@@ -10,8 +10,10 @@
 #   Module 1 -- Doorbell Transceiver (ASK/OOK, CC1101 #1)
 #     id: doorbell_radio
 #     CS=GPIO26, GDO0=GPIO25, 433.92 MHz
-#     Uses remote_receiver / remote_transmitter on the GDO0 pin
-#     for OOK signal encoding/decoding.
+#     RX: remote_receiver on GPIO25 decodes incoming button presses.
+#     TX: bit-banged OOK via gpio_set_level() in a critical section,
+#         bypassing remote_transmitter entirely (RMT GPIO matrix
+#         routing is broken by CC1101 pin_mode calls).
 #
 #   Module 2 -- TPMS Receiver (ASK/OOK, CC1101 #2)
 #     id: tpms_radio
@@ -25,11 +27,6 @@
 # Both CC1101 modules share the same ESPHome-managed SPI bus
 # (VSPI peripheral). The ESPHome SPI driver handles chip-select
 # arbitration, so there is no dual-driver race condition.
-#
-# The doorbell CC1101 uses cc1101.begin_tx / cc1101.begin_rx
-# actions triggered by remote_transmitter callbacks:
-#   on_transmit  -- fires BEFORE data is sent (switch radio to TX)
-#   on_complete  -- fires AFTER data is sent  (switch radio back to RX)
 #
 # The TPMS CC1101 runs in packet_mode with sync_mode disabled.
 # The on_packet lambda logs ALL received packets as a hex dump
@@ -103,9 +100,9 @@ spi:
 # Module 1: Doorbell Transceiver (ASK/OOK, CC1101 #1)
 # ============================================================
 # The doorbell CC1101 is wired to GPIO25 (GDO0). The cc1101
-# component manages the radio via SPI, while remote_receiver
-# and remote_transmitter share the GDO0 pin (allow_other_uses)
-# for OOK signal encoding/decoding.
+# component manages the radio via SPI. remote_receiver listens
+# on GPIO25 (allow_other_uses) for incoming button presses.
+# TX is bit-banged directly in the button lambda.
 # ------------------------------------------------------------
 
 # ============================================================
@@ -245,11 +242,11 @@ cc1101:
             }
 
 # ============================================================
-# Doorbell Remote Receiver / Transmitter
+# Doorbell Remote Receiver
 # ============================================================
 # Receives doorbell presses from physical buttons outside.
-# Only dump rc_switch protocol to avoid flooding the log with
-# every decoded signal on 433 MHz.
+# Decodes RC switch protocols only to avoid log flooding.
+# TX is done via bit-bang in the button lambda (see below).
 # ------------------------------------------------------------
 
 remote_receiver:
@@ -257,17 +254,7 @@ remote_receiver:
   pin:
     number: GPIO25
     allow_other_uses: true
-  dump: raw  # DEBUG: temporarily on GPIO25 to verify RMT pulse output during TX
-
-# Transmits to your internal doorbell chimes.
-# GPIO25 drives GDO0 exclusively for TX (no pin sharing needed).
-remote_transmitter:
-  id: doorbell_transmitter
-  pin:
-    number: GPIO25
-    allow_other_uses: true
-  carrier_duty_percent: 100%
-  non_blocking: false
+  dump: rc_switch
 
 # ============================================================
 # TPMS Template Sensors
@@ -350,8 +337,8 @@ interval:
 # Doorbell Automation Logic
 # ============================================================
 # A template switch acts as a 10-second lock-out to prevent
-# repeated chime triggers. The button triggers the RC switch
-# code transmission through the doorbell CC1101.
+# repeated chime triggers. The button bit-bangs the OOK signal
+# directly on GPIO25 (GDO0) via doorbell_bitbang_ook().
 # ------------------------------------------------------------
 
 switch:
@@ -379,23 +366,62 @@ button:
             - switch.turn_on: doorbell_lock
             - logger.log: "Doorbell TX starting"
             - lambda: |-
-                ESP_LOGI("doorbell", "Transmitter is_failed=%d", id(doorbell_transmitter)->is_failed());
-            - cc1101.begin_tx:
-                id: doorbell_radio
-            - lambda: |-
-                // begin_tx() calls pin_mode(FLAG_OUTPUT) which resets GPIO25
-                // IO_MUX to plain software GPIO, breaking the RMT matrix route.
-                // Re-connect the RMT TX channel signal to GPIO25 directly.
-                DoorbellTxHelper::reattach_rmt(id(doorbell_transmitter), 25);
-            - delay: 2ms
-            # Transmits the captured signal from the physical doorbell button.
-            # Source: raw dump captured on GPIO25/GDO0 via CC1101 RX (dump: raw).
-            - remote_transmitter.transmit_raw:
-                code:
-                  [571, -220, 168, -560, 559, -194, 551, -237, 533, -212, 571, -197, 169, -586, 171, -577, 170, -576, 559, -213, 564, -182, 184, -580, 181, -553, 184, -578, 557, -197, 583, -172, 186, -603, 541, -207, 166, -579, 177, -576, 172, -579, 171, -574, 559, -212, 558, -205, 180, -5780]
-                repeat:
-                  times: 20
-                  wait_time: 0ms
-            - logger.log: "Doorbell TX done"
+                // Bit-bang OOK doorbell signal directly on GPIO25 (GDO0).
+                //
+                // We bypass cc1101.begin_tx() entirely because it calls
+                // gdo0_pin_->pin_mode(FLAG_OUTPUT) which re-routes GPIO25
+                // through the plain CPU GPIO output path. That's fine for
+                // bit-bang, but it also detaches the CC1101 interrupt, which
+                // begin_tx normally manages. We replicate only what we need:
+                //  1. Set PKTCTRL0=0x32 (async serial TX mode) via SPI
+                //  2. Strobe CC1101 to IDLE then into TX
+                //  3. Configure GPIO25 as plain output
+                //  4. Bit-bang the OOK pulse train via gpio_set_level + ets_delay_us
+                //     inside a critical section for deterministic timing
+                //  5. Call begin_rx() normally to restore RX mode
+
+                using namespace esphome::cc1101;
+                auto *radio = id(doorbell_radio);
+
+                // Step 1: Set async serial TX mode (PKTCTRL0 = 0x32)
+                // Bit[5:4]=11 = async serial mode; Bit[1]=1 = infinite packet length
+                DoorbellCC1101Helper::pub_write(radio, Register::PKTCTRL0, 0x32);
+
+                // Step 2: Strobe IDLE then TX (mirrors begin_tx without pin_mode)
+                DoorbellCC1101Helper::pub_enter_idle(radio);
+                bool tx_ok = DoorbellCC1101Helper::pub_enter_tx(radio);
+                if (!tx_ok) {
+                  ESP_LOGW("doorbell", "CC1101 failed to enter TX state");
+                }
+
+                // Step 3: Configure GPIO25 as plain output for bit-bang
+                // (CC1101 async serial mode: GDO0 is the serial data INPUT from ESP)
+                gpio_config_t io_conf = {};
+                io_conf.pin_bit_mask = (1ULL << 25);
+                io_conf.mode = GPIO_MODE_OUTPUT;
+                io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+                io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+                io_conf.intr_type = GPIO_INTR_DISABLE;
+                gpio_config(&io_conf);
+
+                // Step 4: Bit-bang the captured doorbell signal 20 times.
+                // Timings in µs — positive = ON (carrier), negative = OFF.
+                // Source: raw dump from physical button press on GPIO25/GDO0.
+                static const int32_t pulses[] = {
+                  571, -220, 168, -560, 559, -194, 551, -237, 533, -212,
+                  571, -197, 169, -586, 171, -577, 170, -576, 559, -213,
+                  564, -182, 184, -580, 181, -553, 184, -578, 557, -197,
+                  583, -172, 186, -603, 541, -207, 166, -579, 177, -576,
+                  172, -579, 171, -574, 559, -212, 558, -205, 180
+                };
+                // The last entry in the captured signal is a ~5780µs inter-repeat
+                // gap. We handle inter-repeat spacing explicitly so we don't
+                // include it in the pulse array (doorbell_bitbang_ook adds its own
+                // gap between repeats).
+                doorbell_bitbang_ook(25, pulses,
+                                     sizeof(pulses) / sizeof(pulses[0]),
+                                     20, 5780);
+
+                ESP_LOGI("doorbell", "Doorbell TX done");
             - cc1101.begin_rx:
                 id: doorbell_radio
