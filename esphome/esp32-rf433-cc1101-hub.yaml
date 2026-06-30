@@ -220,8 +220,8 @@ cc1101:
               sensor::Sensor* temperature;
             };
             const TpmsSensor sensors[] = {
-              {0x000FFF, "Front Wheel",   id(tpms_front_pressure),  id(tpms_front_temperature)},
-              {0x000AAA, "Rear Wheel",    id(tpms_rear_pressure),   id(tpms_rear_temperature)},
+              {0x2242BA, "Front Wheel",   id(tpms_front_pressure),  id(tpms_front_temperature)},
+              {0x2242E1, "Rear Wheel",    id(tpms_rear_pressure),   id(tpms_rear_temperature)},
             };
 
             bool matched = false;
@@ -281,7 +281,7 @@ remote_receiver:
 # ------------------------------------------------------------
 
 sensor:
-  # -- Front Wheel (ID: 0x000FFF) --
+  # -- Front Wheel (ID: 0x2242BA / 2242810) --
   - platform: template
     name: "TPMS Front Wheel Pressure"
     id: tpms_front_pressure
@@ -298,7 +298,7 @@ sensor:
     accuracy_decimals: 1
     state_class: measurement
 
-  # -- Rear Wheel (ID: 0x000AAA) --
+  # -- Rear Wheel (ID: 0x2242E1 / 2244065) --
   - platform: template
     name: "TPMS Rear Wheel Pressure"
     id: tpms_rear_pressure
