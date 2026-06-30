@@ -150,7 +150,7 @@ cc1101:
     filter_bandwidth: 203kHz
     rx_attenuation: 0dB
     packet_mode: true
-    packet_length: 30
+    packet_length: 64
     sync_mode: None
     num_preamble: 0
     on_packet:
@@ -173,7 +173,7 @@ cc1101:
             bool has_nonzero = false;
             for (size_t i = 1; i < x.size(); i++) { if (x[i]) { has_nonzero = true; break; } }
             if (has_nonzero) {
-              char hex[200];
+              char hex[256];
               int hpos = 0;
               for (size_t i = 0; i < x.size() && hpos < (int)sizeof(hex) - 4; i++) {
                 if (i > 0) hex[hpos++] = ' ';
@@ -184,7 +184,7 @@ cc1101:
             }
 
             // ---- Software Manchester decode ----
-            // At 4159 baud, each CC1101 bit = one Manchester chip (123µs/chip).
+            // At 8130 baud, each CC1101 bit = one Manchester chip (123µs/chip).
             // 64 bytes = 512 chips. EG53MA4: 40-bit preamble (AA AA AA AA AA) + 80 data bits = 120 chips.
             // Search for Manchester preamble (0xAA = 10101010) then decode 80 Manchester bits.
             // Manchester zerobit: chip pair 10->1, 01->0.
