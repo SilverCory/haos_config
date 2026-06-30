@@ -145,14 +145,14 @@ cc1101:
     gdo0_pin: GPIO27
     frequency: 433.92MHz
     modulation_type: ASK/OOK
-    manchester: false
-    symbol_rate: 4800
-    filter_bandwidth: 203kHz
+    manchester: true
+    symbol_rate: 4159
+    filter_bandwidth: 58kHz
     rx_attenuation: 0dB
     packet_mode: true
-    packet_length: 20
+    packet_length: 10
     sync_mode: None
-    num_preamble: 0
+    num_preamble: 4
     on_packet:
       then:
         - lambda: |-
@@ -169,9 +169,7 @@ cc1101:
             // For packets that fail checksum or are the wrong length:
             //   [tpms_raw] 7 bytes: AA BB CC 0A 1B 2C DD
 
-            // all-FF filter disabled for debugging
-
-            char hex[200];
+            char hex[60];
             int pos = 0;
             for (size_t i = 0; i < x.size() && pos < (int)sizeof(hex) - 4; i++) {
               if (i > 0) hex[pos++] = ' ';
@@ -181,11 +179,10 @@ cc1101:
             ESP_LOGI("tpms_raw", "%u bytes: %s", (unsigned)x.size(), hex);
 
             // ---- Schrader EG53MA4 TPMS decoder ----
-            // Expect exactly 10 bytes: 4 flags + 3 ID + 1 pressure + 1 temp + 1 checksum
-            if (x.size() < 10) return;
+            // CC1101 with manchester:true delivers 10 Manchester-decoded bytes.
+            // Layout: b[0]-b[3]=flags, b[4]-b[6]=ID(24-bit), b[7]=pressure, b[8]=temp_F, b[9]=checksum
 
-            // Filter all-0xFF packets (noise fills FIFO with 0xFF; 9*0xFF sums
-            // to 0xFF mod 256, so they pass the checksum — reject explicitly).
+            // Filter all-0xFF packets (Manchester all-ones noise)
             if (x[0] == 0xFF && x[1] == 0xFF && x[2] == 0xFF) return;
 
             // Validate checksum: sum of bytes 0-8 must equal byte 9
