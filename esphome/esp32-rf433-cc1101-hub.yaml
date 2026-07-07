@@ -298,7 +298,7 @@ remote_receiver:
   pin:
     number: GPIO25
     allow_other_uses: true
-  dump: raw
+  dump: rc_switch
 
 # ============================================================
 # TPMS Template Sensors
@@ -398,6 +398,54 @@ switch:
         - switch.turn_off: doorbell_lock
 
 button:
+  - platform: template
+    name: Garage Door Toggle
+    icon: mdi:garage
+    id: garage_door_button
+    on_press:
+      - lambda: |-
+          // Bit-bang Hormann HS fixed-code garage door signal on GPIO25 (GDO0).
+          // Code: 0000101000000001000001 (22 bits, mark-width encoded)
+          // Structure: 6-pulse preamble + sync gap + 22 data bits + final mark
+          // short mark=450µs, long mark=955µs; short space=583µs, long space=1093µs
+
+          using namespace esphome::cc1101;
+          auto *radio = id(doorbell_radio);
+
+          DoorbellCC1101Helper::pub_write(radio, Register::PKTCTRL0, 0x32);
+          DoorbellCC1101Helper::pub_enter_idle(radio);
+          bool tx_ok = DoorbellCC1101Helper::pub_enter_tx(radio);
+          if (!tx_ok) {
+            ESP_LOGW("garage", "CC1101 failed to enter TX state");
+          }
+
+          gpio_config_t io_conf = {};
+          io_conf.pin_bit_mask = (1ULL << 25);
+          io_conf.mode = GPIO_MODE_OUTPUT;
+          io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+          io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+          io_conf.intr_type = GPIO_INTR_DISABLE;
+          gpio_config(&io_conf);
+
+          static const int32_t pulses[] = {
+            450, -566, 450, -566, 450, -566, 450, -566, 450, -566, 450, -566,
+            955, -1622,
+            445, -583, 445, -583, 445, -583, 445, -583,
+            955, -1093,
+            445, -583,
+            955, -1093,
+            445, -583, 445, -583, 445, -583, 445, -583, 445, -583, 445, -583,
+            445, -583, 445, -583,
+            955, -1093,
+            445, -583, 445, -583, 445, -583, 445, -583, 445, -583,
+            955, -1093,
+            946
+          };
+          doorbell_bitbang_ook(25, pulses, sizeof(pulses) / sizeof(pulses[0]), 3, 10000);
+
+          DoorbellCC1101Helper::pub_enter_rx(radio);
+          ESP_LOGI("garage", "TX done");
+
   - platform: template
     name: Doorbell Chime Ring
     icon: mdi:bell-ring
