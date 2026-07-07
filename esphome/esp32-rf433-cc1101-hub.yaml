@@ -298,7 +298,7 @@ remote_receiver:
   pin:
     number: GPIO25
     allow_other_uses: true
-  dump: rc_switch
+  dump: raw
 
 # ============================================================
 # TPMS Template Sensors
