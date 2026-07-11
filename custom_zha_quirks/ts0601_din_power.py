@@ -405,7 +405,13 @@ class PJ1203CDualPowerMeter(TuyaSwitch):
                     TuyaManufClusterAttributes.cluster_id,  # 0xEF00
                 ],
                 OUTPUT_CLUSTERS: [Time.cluster_id, Ota.cluster_id],
-            }
+            },
+            242: {
+                PROFILE_ID: 0xA1E0,
+                DEVICE_TYPE: 0x0061,
+                INPUT_CLUSTERS: [],
+                OUTPUT_CLUSTERS: [0x0021],
+            },
         },
     }
 

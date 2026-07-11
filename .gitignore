@@ -13,3 +13,4 @@ tts
 *.db-*
 *.log
 *.log.*
+*.lock
