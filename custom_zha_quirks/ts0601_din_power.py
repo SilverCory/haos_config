@@ -279,17 +279,17 @@ class TuyaPowerMeter(TuyaSwitch):
 
 
 
-"""PJ-1203C Dual Channel Power Meter DP constants (0x0200 | dp)"""
-PJ1203C_CH_A_POWER_DP = 0x0265   # dp 101, uint32, ÷10 → W
-PJ1203C_CH_B_POWER_DP = 0x0269   # dp 105, uint32, ÷10 → W
-PJ1203C_CH_A_SWITCH_DP = 0x0266  # dp 102, bool
-PJ1203C_CH_B_SWITCH_DP = 0x0268  # dp 104, bool
-PJ1203C_VOLTAGE_DP = 0x0270      # dp 112, uint32, ÷10 → V
-PJ1203C_CH_A_CURRENT_DP = 0x0271 # dp 113, uint32, mA
-PJ1203C_CH_B_CURRENT_DP = 0x0272 # dp 114, uint32, mA
-PJ1203C_CH_A_ENERGY_DP = 0x026A  # dp 106, uint32, Wh
-PJ1203C_CH_B_ENERGY_DP = 0x026B  # dp 107, uint32, Wh
-PJ1203C_FREQUENCY_DP = 0x026F    # dp 111, uint32, ÷100 → Hz
+"""PJ-1203C Dual Channel Power Meter DP constants ((type << 8) | dp)"""
+PJ1203C_CH_A_POWER_DP = 0x0265   # dp 101, type 0x02 uint32, ÷10 → W
+PJ1203C_CH_B_POWER_DP = 0x0269   # dp 105, type 0x02 uint32, ÷10 → W
+PJ1203C_CH_A_SWITCH_DP = 0x0466  # dp 102, type 0x04 bool
+PJ1203C_CH_B_SWITCH_DP = 0x0468  # dp 104, type 0x04 bool
+PJ1203C_VOLTAGE_DP = 0x0270      # dp 112, type 0x02 uint32, ÷10 → V
+PJ1203C_CH_A_CURRENT_DP = 0x0271 # dp 113, type 0x02 uint32, mA
+PJ1203C_CH_B_CURRENT_DP = 0x0272 # dp 114, type 0x02 uint32, mA
+PJ1203C_CH_A_ENERGY_DP = 0x026A  # dp 106, type 0x02 uint32, Wh
+PJ1203C_CH_B_ENERGY_DP = 0x026B  # dp 107, type 0x02 uint32, Wh
+PJ1203C_FREQUENCY_DP = 0x026F    # dp 111, type 0x02 uint32, ÷100 → Hz
 
 
 class PJ1203CPowerMeasurement(TuyaPowerMeasurement):
@@ -320,10 +320,10 @@ class PJ1203CManufCluster(TuyaManufClusterAttributes):
             id=PJ1203C_CH_B_POWER_DP, type=t.uint32_t, is_manufacturer_specific=True
         )
         ch_a_switch: Final = ZCLAttributeDef(
-            id=PJ1203C_CH_A_SWITCH_DP, type=t.uint8_t, is_manufacturer_specific=True
+            id=PJ1203C_CH_A_SWITCH_DP, type=t.Bool, is_manufacturer_specific=True
         )
         ch_b_switch: Final = ZCLAttributeDef(
-            id=PJ1203C_CH_B_SWITCH_DP, type=t.uint8_t, is_manufacturer_specific=True
+            id=PJ1203C_CH_B_SWITCH_DP, type=t.Bool, is_manufacturer_specific=True
         )
         voltage: Final = ZCLAttributeDef(
             id=PJ1203C_VOLTAGE_DP, type=t.uint32_t, is_manufacturer_specific=True
