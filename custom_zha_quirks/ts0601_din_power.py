@@ -137,8 +137,6 @@ class TuyaPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
 class TuyaElectricalMeasurement(LocalDataCluster, Metering):
     """Custom class for total energy measurement."""
 
-    ep_attribute = "channel_a_metering"
-
     CURRENT_DELIVERED_ID = 0x0000
     CURRENT_RECEIVED_ID = 0x0001
     POWER_WATT = 0x0000
@@ -295,8 +293,6 @@ PJ1203C_FREQUENCY_DP = 0x026F    # dp 111, uint32, ÷100 → Hz
 class PJ1203CPowerMeasurement(TuyaPowerMeasurement):
     """Ch A electrical measurement with pre-seeded attributes."""
 
-    ep_attribute = "channel_a_electrical_measurement"
-
     _CONSTANT_ATTRIBUTES = {
         TuyaPowerMeasurement.AC_CURRENT_MULTIPLIER: 1,
         TuyaPowerMeasurement.AC_CURRENT_DIVISOR: 1000,
@@ -371,8 +367,6 @@ class PJ1203CManufCluster(TuyaManufClusterAttributes):
 class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
     """Ch B electrical measurement."""
 
-    ep_attribute = "channel_b_electrical_measurement"
-
     POWER_ID = 0x050B
     CURRENT_ID = 0x0508
 
@@ -395,8 +389,6 @@ class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
 
 class PJ1203CChBMetering(LocalDataCluster, Metering):
     """Ch B energy metering."""
-
-    ep_attribute = "channel_b_metering"
 
     CURRENT_DELIVERED_ID = 0x0000
     POWER_WATT = 0x0000
