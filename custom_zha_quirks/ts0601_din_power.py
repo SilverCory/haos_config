@@ -142,7 +142,7 @@ class TuyaElectricalMeasurement(LocalDataCluster, Metering):
     POWER_WATT = 0x0000
 
     """Setting unit of measurement."""
-    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT}
+    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT, CURRENT_DELIVERED_ID: 0}
 
     def energy_deliver_reported(self, value):
         """Summation Energy Deliver reported."""
@@ -290,6 +290,21 @@ PJ1203C_CH_B_ENERGY_DP = 107  # 0x6b, uint32, Wh
 PJ1203C_FREQUENCY_DP = 111    # 0x6f, uint32, ÷100 → Hz
 
 
+class PJ1203CPowerMeasurement(TuyaPowerMeasurement):
+    """Ch A electrical measurement with pre-seeded attributes."""
+
+    _CONSTANT_ATTRIBUTES = {
+        TuyaPowerMeasurement.AC_CURRENT_MULTIPLIER: 1,
+        TuyaPowerMeasurement.AC_CURRENT_DIVISOR: 1000,
+        TuyaPowerMeasurement.AC_FREQUENCY_MULTIPLIER: 1,
+        TuyaPowerMeasurement.AC_FREQUENCY_DIVISOR: 100,
+        TuyaPowerMeasurement.POWER_ID: 0,
+        TuyaPowerMeasurement.VOLTAGE_ID: 0,
+        TuyaPowerMeasurement.CURRENT_ID: 0,
+        TuyaPowerMeasurement.AC_FREQUENCY_ID: 0,
+    }
+
+
 class PJ1203CManufCluster(TuyaManufClusterAttributes):
     """Manufacturer cluster for PJ-1203C dual channel power meter."""
 
@@ -361,6 +376,8 @@ class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
     _CONSTANT_ATTRIBUTES = {
         AC_CURRENT_MULTIPLIER: 1,
         AC_CURRENT_DIVISOR: 1000,
+        POWER_ID: 0,
+        CURRENT_ID: 0,
     }
 
     def power_reported(self, value):
@@ -375,7 +392,7 @@ class PJ1203CChBMetering(LocalDataCluster, Metering):
 
     CURRENT_DELIVERED_ID = 0x0000
     POWER_WATT = 0x0000
-    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT}
+    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT, CURRENT_DELIVERED_ID: 0}
 
     def energy_reported(self, value):
         self._update_attribute(self.CURRENT_DELIVERED_ID, value)
@@ -425,7 +442,7 @@ class PJ1203CDualPowerMeter(TuyaSwitch):
                     Groups.cluster_id,
                     Scenes.cluster_id,
                     PJ1203CManufCluster,
-                    TuyaPowerMeasurement,
+                    PJ1203CPowerMeasurement,
                     TuyaElectricalMeasurement,
                     TuyaOnOff,
                 ],
