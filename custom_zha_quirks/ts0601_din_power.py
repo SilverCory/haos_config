@@ -277,6 +277,164 @@ class TuyaPowerMeter(TuyaSwitch):
 
 
 
+"""PJ-1203C Dual Channel Power Meter DP constants"""
+PJ1203C_CH_A_POWER_DP = 101   # 0x65, uint32, ÷10 → W
+PJ1203C_CH_B_POWER_DP = 105   # 0x69, uint32, ÷10 → W
+PJ1203C_CH_A_SWITCH_DP = 102  # 0x66, bool
+PJ1203C_CH_B_SWITCH_DP = 104  # 0x68, bool
+PJ1203C_VOLTAGE_DP = 112      # 0x70, uint32, ÷10 → V
+PJ1203C_CH_A_CURRENT_DP = 113 # 0x71, uint32, mA → ÷1000 → A
+PJ1203C_CH_B_CURRENT_DP = 114 # 0x72, uint32, mA → ÷1000 → A
+PJ1203C_CH_A_ENERGY_DP = 106  # 0x6a, uint32, Wh
+PJ1203C_CH_B_ENERGY_DP = 107  # 0x6b, uint32, Wh
+PJ1203C_FREQUENCY_DP = 111    # 0x6f, uint32, ÷100 → Hz
+
+
+class PJ1203CManufCluster(TuyaManufClusterAttributes):
+    """Manufacturer cluster for PJ-1203C dual channel power meter."""
+
+    class AttributeDefs(TuyaManufClusterAttributes.AttributeDefs):
+        ch_a_power: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_A_POWER_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        ch_b_power: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_B_POWER_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        ch_a_switch: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_A_SWITCH_DP, type=t.uint8_t, is_manufacturer_specific=True
+        )
+        ch_b_switch: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_B_SWITCH_DP, type=t.uint8_t, is_manufacturer_specific=True
+        )
+        voltage: Final = ZCLAttributeDef(
+            id=PJ1203C_VOLTAGE_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        ch_a_current: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_A_CURRENT_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        ch_b_current: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_B_CURRENT_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        ch_a_energy: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_A_ENERGY_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        ch_b_energy: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_B_ENERGY_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        frequency: Final = ZCLAttributeDef(
+            id=PJ1203C_FREQUENCY_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+
+    def _update_attribute(self, attrid, value):
+        super()._update_attribute(attrid, value)
+        if attrid == PJ1203C_VOLTAGE_DP:
+            self.endpoint.electrical_measurement.voltage_reported(value / 10)
+        elif attrid == PJ1203C_FREQUENCY_DP:
+            self.endpoint.electrical_measurement.frequency_reported(value / 100)
+        elif attrid == PJ1203C_CH_A_POWER_DP:
+            self.endpoint.electrical_measurement.power_reported(value / 10)
+        elif attrid == PJ1203C_CH_A_CURRENT_DP:
+            self.endpoint.electrical_measurement.current_reported(value)
+        elif attrid == PJ1203C_CH_A_ENERGY_DP:
+            self.endpoint.smartenergy_metering.energy_deliver_reported(value / 1000)
+        elif attrid == PJ1203C_CH_A_SWITCH_DP:
+            self.endpoint.device.switch_bus.listener_event(SWITCH_EVENT, 1, value)
+        elif attrid == PJ1203C_CH_B_POWER_DP:
+            self.endpoint.device.endpoints[2].electrical_measurement.power_reported(value / 10)
+        elif attrid == PJ1203C_CH_B_CURRENT_DP:
+            self.endpoint.device.endpoints[2].electrical_measurement.current_reported(value)
+        elif attrid == PJ1203C_CH_B_ENERGY_DP:
+            self.endpoint.device.endpoints[2].smartenergy_metering.energy_reported(value / 1000)
+        elif attrid == PJ1203C_CH_B_SWITCH_DP:
+            self.endpoint.device.switch_bus.listener_event(SWITCH_EVENT, 2, value)
+
+
+class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
+    """Ch B electrical measurement."""
+
+    POWER_ID = 0x050B
+    CURRENT_ID = 0x0508
+
+    AC_CURRENT_MULTIPLIER = 0x0602
+    AC_CURRENT_DIVISOR = 0x0603
+
+    _CONSTANT_ATTRIBUTES = {
+        AC_CURRENT_MULTIPLIER: 1,
+        AC_CURRENT_DIVISOR: 1000,
+    }
+
+    def power_reported(self, value):
+        self._update_attribute(self.POWER_ID, value)
+
+    def current_reported(self, value):
+        self._update_attribute(self.CURRENT_ID, value)
+
+
+class PJ1203CChBMetering(LocalDataCluster, Metering):
+    """Ch B energy metering."""
+
+    CURRENT_DELIVERED_ID = 0x0000
+    POWER_WATT = 0x0000
+    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT}
+
+    def energy_reported(self, value):
+        self._update_attribute(self.CURRENT_DELIVERED_ID, value)
+
+
+class PJ1203CDualPowerMeter(TuyaSwitch):
+    """PJ-1203C dual channel DIN rail power meter (_TZE28C1000000_81yrt3lo)."""
+
+    def __init__(self, *args, **kwargs):
+        self.switch_bus = Bus()
+        super().__init__(*args, **kwargs)
+
+    signature = {
+        MODELS_INFO: [("_TZE28C1000000_81yrt3lo", "TS0601")],
+        ENDPOINTS: {
+            1: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.SMART_PLUG,
+                INPUT_CLUSTERS: [
+                    Basic.cluster_id,
+                    Groups.cluster_id,
+                    Scenes.cluster_id,
+                    TuyaManufClusterAttributes.cluster_id,
+                ],
+                OUTPUT_CLUSTERS: [Time.cluster_id, Ota.cluster_id],
+            }
+        },
+    }
+
+    replacement = {
+        ENDPOINTS: {
+            1: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.SMART_PLUG,
+                INPUT_CLUSTERS: [
+                    Basic.cluster_id,
+                    Groups.cluster_id,
+                    Scenes.cluster_id,
+                    PJ1203CManufCluster,
+                    TuyaPowerMeasurement,
+                    TuyaElectricalMeasurement,
+                    TuyaOnOff,
+                ],
+                OUTPUT_CLUSTERS: [Time.cluster_id, Ota.cluster_id],
+            },
+            2: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.SMART_PLUG,
+                INPUT_CLUSTERS: [
+                    PJ1203CChBPowerMeasurement,
+                    PJ1203CChBMetering,
+                    TuyaOnOff,
+                ],
+                OUTPUT_CLUSTERS: [],
+            },
+        }
+    }
+
+
 class HikingPowerMeter(TuyaSwitch):
     """Hiking Power Meter Device - DDS238-2."""
 
