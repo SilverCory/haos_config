@@ -4,7 +4,7 @@ from typing import Final
 
 from zigpy.profiles import zha
 import zigpy.types as t
-from zigpy.zcl.clusters.general import Basic, Groups, Ota, Scenes, Time
+from zigpy.zcl.clusters.general import Basic, Groups, Identify, Ota, Scenes, Time
 from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
 from zigpy.zcl.clusters.smartenergy import Metering
 from zigpy.zcl.foundation import ZCLAttributeDef
@@ -395,10 +395,14 @@ class PJ1203CDualPowerMeter(TuyaSwitch):
                 PROFILE_ID: zha.PROFILE_ID,
                 DEVICE_TYPE: zha.DeviceType.SMART_PLUG,
                 INPUT_CLUSTERS: [
-                    Basic.cluster_id,
-                    Groups.cluster_id,
-                    Scenes.cluster_id,
-                    TuyaManufClusterAttributes.cluster_id,
+                    Basic.cluster_id,       # 0x0000
+                    0xE000,
+                    0xEB00,
+                    0xED00,
+                    Groups.cluster_id,      # 0x0004
+                    Scenes.cluster_id,      # 0x0005
+                    Identify.cluster_id,    # 0x0003
+                    TuyaManufClusterAttributes.cluster_id,  # 0xEF00
                 ],
                 OUTPUT_CLUSTERS: [Time.cluster_id, Ota.cluster_id],
             }
