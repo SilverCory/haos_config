@@ -137,6 +137,8 @@ class TuyaPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
 class TuyaElectricalMeasurement(LocalDataCluster, Metering):
     """Custom class for total energy measurement."""
 
+    ep_attribute = "channel_a_metering"
+
     CURRENT_DELIVERED_ID = 0x0000
     CURRENT_RECEIVED_ID = 0x0001
     POWER_WATT = 0x0000
@@ -277,21 +279,23 @@ class TuyaPowerMeter(TuyaSwitch):
 
 
 
-"""PJ-1203C Dual Channel Power Meter DP constants"""
-PJ1203C_CH_A_POWER_DP = 101   # 0x65, uint32, ÷10 → W
-PJ1203C_CH_B_POWER_DP = 105   # 0x69, uint32, ÷10 → W
-PJ1203C_CH_A_SWITCH_DP = 102  # 0x66, bool
-PJ1203C_CH_B_SWITCH_DP = 104  # 0x68, bool
-PJ1203C_VOLTAGE_DP = 112      # 0x70, uint32, ÷10 → V
-PJ1203C_CH_A_CURRENT_DP = 113 # 0x71, uint32, mA → ÷1000 → A
-PJ1203C_CH_B_CURRENT_DP = 114 # 0x72, uint32, mA → ÷1000 → A
-PJ1203C_CH_A_ENERGY_DP = 106  # 0x6a, uint32, Wh
-PJ1203C_CH_B_ENERGY_DP = 107  # 0x6b, uint32, Wh
-PJ1203C_FREQUENCY_DP = 111    # 0x6f, uint32, ÷100 → Hz
+"""PJ-1203C Dual Channel Power Meter DP constants (0x0200 | dp)"""
+PJ1203C_CH_A_POWER_DP = 0x0265   # dp 101, uint32, ÷10 → W
+PJ1203C_CH_B_POWER_DP = 0x0269   # dp 105, uint32, ÷10 → W
+PJ1203C_CH_A_SWITCH_DP = 0x0266  # dp 102, bool
+PJ1203C_CH_B_SWITCH_DP = 0x0268  # dp 104, bool
+PJ1203C_VOLTAGE_DP = 0x0270      # dp 112, uint32, ÷10 → V
+PJ1203C_CH_A_CURRENT_DP = 0x0271 # dp 113, uint32, mA
+PJ1203C_CH_B_CURRENT_DP = 0x0272 # dp 114, uint32, mA
+PJ1203C_CH_A_ENERGY_DP = 0x026A  # dp 106, uint32, Wh
+PJ1203C_CH_B_ENERGY_DP = 0x026B  # dp 107, uint32, Wh
+PJ1203C_FREQUENCY_DP = 0x026F    # dp 111, uint32, ÷100 → Hz
 
 
 class PJ1203CPowerMeasurement(TuyaPowerMeasurement):
     """Ch A electrical measurement with pre-seeded attributes."""
+
+    ep_attribute = "channel_a_electrical_measurement"
 
     _CONSTANT_ATTRIBUTES = {
         TuyaPowerMeasurement.AC_CURRENT_MULTIPLIER: 1,
@@ -367,6 +371,8 @@ class PJ1203CManufCluster(TuyaManufClusterAttributes):
 class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
     """Ch B electrical measurement."""
 
+    ep_attribute = "channel_b_electrical_measurement"
+
     POWER_ID = 0x050B
     CURRENT_ID = 0x0508
 
@@ -389,6 +395,8 @@ class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
 
 class PJ1203CChBMetering(LocalDataCluster, Metering):
     """Ch B energy metering."""
+
+    ep_attribute = "channel_b_metering"
 
     CURRENT_DELIVERED_ID = 0x0000
     POWER_WATT = 0x0000
