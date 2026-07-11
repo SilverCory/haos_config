@@ -297,11 +297,20 @@ class PJ1203CPowerMeasurement(TuyaPowerMeasurement):
 
     ep_attribute = "electrical_measurement"
 
+    AC_VOLTAGE_MULTIPLIER = 0x0600
+    AC_VOLTAGE_DIVISOR = 0x0601
+    AC_POWER_MULTIPLIER = 0x0604
+    AC_POWER_DIVISOR = 0x0605
+
     _CONSTANT_ATTRIBUTES = {
         TuyaPowerMeasurement.AC_CURRENT_MULTIPLIER: 1,
         TuyaPowerMeasurement.AC_CURRENT_DIVISOR: 1000,
         TuyaPowerMeasurement.AC_FREQUENCY_MULTIPLIER: 1,
         TuyaPowerMeasurement.AC_FREQUENCY_DIVISOR: 100,
+        0x0600: 1,  # ac_voltage_multiplier
+        0x0601: 1,  # ac_voltage_divisor
+        0x0604: 1,  # ac_power_multiplier
+        0x0605: 1,  # ac_power_divisor
         TuyaPowerMeasurement.POWER_ID: 0,
         TuyaPowerMeasurement.VOLTAGE_ID: 0,
         TuyaPowerMeasurement.CURRENT_ID: 0,
@@ -356,16 +365,12 @@ class PJ1203CManufCluster(TuyaManufClusterAttributes):
             self.endpoint.electrical_measurement.current_reported(value)
         elif attrid == PJ1203C_CH_A_ENERGY_DP:
             self.endpoint.smartenergy_metering.energy_deliver_reported(value / 1000)
-        elif attrid == PJ1203C_CH_A_SWITCH_DP:
-            self.endpoint.device.switch_bus.listener_event(SWITCH_EVENT, 1, value)
         elif attrid == PJ1203C_CH_B_POWER_DP:
             self.endpoint.device.endpoints[2].electrical_measurement.power_reported(value / 10)
         elif attrid == PJ1203C_CH_B_CURRENT_DP:
             self.endpoint.device.endpoints[2].electrical_measurement.current_reported(value)
         elif attrid == PJ1203C_CH_B_ENERGY_DP:
             self.endpoint.device.endpoints[2].smartenergy_metering.energy_reported(value / 1000)
-        elif attrid == PJ1203C_CH_B_SWITCH_DP:
-            self.endpoint.device.switch_bus.listener_event(SWITCH_EVENT, 2, value)
 
 
 class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
@@ -382,6 +387,8 @@ class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
     _CONSTANT_ATTRIBUTES = {
         AC_CURRENT_MULTIPLIER: 1,
         AC_CURRENT_DIVISOR: 1000,
+        0x0604: 1,  # ac_power_multiplier
+        0x0605: 1,  # ac_power_divisor
         POWER_ID: 0,
         CURRENT_ID: 0,
     }
@@ -408,10 +415,6 @@ class PJ1203CChBMetering(LocalDataCluster, Metering):
 
 class PJ1203CDualPowerMeter(TuyaSwitch):
     """PJ-1203C dual channel DIN rail power meter (_TZE28C1000000_81yrt3lo)."""
-
-    def __init__(self, *args, **kwargs):
-        self.switch_bus = Bus()
-        super().__init__(*args, **kwargs)
 
     signature = {
         MODELS_INFO: [("_TZE28C1000000_81yrt3lo", "TS0601")],
@@ -452,7 +455,6 @@ class PJ1203CDualPowerMeter(TuyaSwitch):
                     PJ1203CManufCluster,
                     PJ1203CPowerMeasurement,
                     TuyaElectricalMeasurement,
-                    TuyaOnOff,
                 ],
                 OUTPUT_CLUSTERS: [Time.cluster_id, Ota.cluster_id],
             },
@@ -462,7 +464,6 @@ class PJ1203CDualPowerMeter(TuyaSwitch):
                 INPUT_CLUSTERS: [
                     PJ1203CChBPowerMeasurement,
                     PJ1203CChBMetering,
-                    TuyaOnOff,
                 ],
                 OUTPUT_CLUSTERS: [],
             },
