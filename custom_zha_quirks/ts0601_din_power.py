@@ -144,7 +144,7 @@ class TuyaElectricalMeasurement(LocalDataCluster, Metering):
     POWER_WATT = 0x0000
 
     """Setting unit of measurement."""
-    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT, CURRENT_DELIVERED_ID: 0}
+    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT}
 
     def energy_deliver_reported(self, value):
         """Summation Energy Deliver reported."""
@@ -311,10 +311,6 @@ class PJ1203CPowerMeasurement(TuyaPowerMeasurement):
         0x0601: 1,  # ac_voltage_divisor
         0x0604: 1,  # ac_power_multiplier
         0x0605: 1,  # ac_power_divisor
-        TuyaPowerMeasurement.POWER_ID: 0,
-        TuyaPowerMeasurement.VOLTAGE_ID: 0,
-        TuyaPowerMeasurement.CURRENT_ID: 0,
-        TuyaPowerMeasurement.AC_FREQUENCY_ID: 0,
     }
 
 
@@ -389,8 +385,6 @@ class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
         AC_CURRENT_DIVISOR: 1000,
         0x0604: 1,  # ac_power_multiplier
         0x0605: 1,  # ac_power_divisor
-        POWER_ID: 0,
-        CURRENT_ID: 0,
     }
 
     def power_reported(self, value):
@@ -407,7 +401,7 @@ class PJ1203CChBMetering(LocalDataCluster, Metering):
 
     CURRENT_DELIVERED_ID = 0x0000
     POWER_WATT = 0x0000
-    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT, CURRENT_DELIVERED_ID: 0}
+    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT}
 
     def energy_reported(self, value):
         self._update_attribute(self.CURRENT_DELIVERED_ID, value)
