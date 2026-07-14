@@ -12,6 +12,7 @@ from zigpy.zcl.foundation import ZCLAttributeDef
 from zhaquirks import Bus, LocalDataCluster
 from zhaquirks.const import (
     DEVICE_TYPE,
+    ENDPOINT_NAME,
     ENDPOINTS,
     INPUT_CLUSTERS,
     MODELS_INFO,
@@ -463,6 +464,7 @@ class PJ1203CDualPowerMeter(TuyaSwitch):
             1: {
                 PROFILE_ID: zha.PROFILE_ID,
                 DEVICE_TYPE: zha.DeviceType.SMART_PLUG,
+                ENDPOINT_NAME: "Channel A",
                 INPUT_CLUSTERS: [
                     Basic.cluster_id,
                     Groups.cluster_id,
@@ -476,6 +478,7 @@ class PJ1203CDualPowerMeter(TuyaSwitch):
             2: {
                 PROFILE_ID: zha.PROFILE_ID,
                 DEVICE_TYPE: zha.DeviceType.SMART_PLUG,
+                ENDPOINT_NAME: "Channel B",
                 INPUT_CLUSTERS: [
                     PJ1203CChBPowerMeasurement,
                     PJ1203CChBMetering,
