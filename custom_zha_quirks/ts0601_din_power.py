@@ -290,6 +290,9 @@ PJ1203C_CH_B_CURRENT_DP = 0x0272 # dp 114, type 0x02 uint32, mA
 PJ1203C_CH_A_ENERGY_DP = 0x026A  # dp 106, type 0x02 uint32, Wh
 PJ1203C_CH_B_ENERGY_DP = 0x026B  # dp 107, type 0x02 uint32, Wh
 PJ1203C_FREQUENCY_DP = 0x026F    # dp 111, type 0x02 uint32, ÷100 → Hz
+PJ1203C_CH_A_PF_DP = 0x026E      # dp 110, type 0x02 uint32, ÷100 → power factor
+PJ1203C_CH_B_PF_DP = 0x0279      # dp 121, type 0x02 uint32, ÷100 → power factor
+PJ1203C_REACTIVE_POWER_DP = 0x0273  # dp 115, type 0x02 uint32, VAr
 
 
 class PJ1203CPowerMeasurement(TuyaPowerMeasurement):
@@ -348,25 +351,40 @@ class PJ1203CManufCluster(TuyaManufClusterAttributes):
         frequency: Final = ZCLAttributeDef(
             id=PJ1203C_FREQUENCY_DP, type=t.uint32_t, is_manufacturer_specific=True
         )
+        ch_a_power_factor: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_A_PF_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        ch_b_power_factor: Final = ZCLAttributeDef(
+            id=PJ1203C_CH_B_PF_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
+        reactive_power: Final = ZCLAttributeDef(
+            id=PJ1203C_REACTIVE_POWER_DP, type=t.uint32_t, is_manufacturer_specific=True
+        )
 
     def _update_attribute(self, attrid, value):
         super()._update_attribute(attrid, value)
         if attrid == PJ1203C_VOLTAGE_DP:
             self.endpoint.electrical_measurement.voltage_reported(value / 10)
         elif attrid == PJ1203C_FREQUENCY_DP:
-            self.endpoint.electrical_measurement.frequency_reported(value / 100)
+            self.endpoint.electrical_measurement.frequency_reported(round(value / 100, 2))
         elif attrid == PJ1203C_CH_A_POWER_DP:
             self.endpoint.electrical_measurement.power_reported(value / 10)
         elif attrid == PJ1203C_CH_A_CURRENT_DP:
             self.endpoint.electrical_measurement.current_reported(value)
         elif attrid == PJ1203C_CH_A_ENERGY_DP:
-            self.endpoint.smartenergy_metering.energy_deliver_reported(value / 1000)
+            self.endpoint.smartenergy_metering.energy_deliver_reported(value / 10000)
         elif attrid == PJ1203C_CH_B_POWER_DP:
             self.endpoint.device.endpoints[2].electrical_measurement.power_reported(value / 10)
         elif attrid == PJ1203C_CH_B_CURRENT_DP:
             self.endpoint.device.endpoints[2].electrical_measurement.current_reported(value)
         elif attrid == PJ1203C_CH_B_ENERGY_DP:
-            self.endpoint.device.endpoints[2].smartenergy_metering.energy_reported(value / 1000)
+            self.endpoint.device.endpoints[2].smartenergy_metering.energy_reported(value / 10000)
+        elif attrid == PJ1203C_CH_A_PF_DP:
+            self.endpoint.electrical_measurement.power_factor_reported(value)
+        elif attrid == PJ1203C_CH_B_PF_DP:
+            self.endpoint.device.endpoints[2].electrical_measurement.power_factor_reported(value)
+        elif attrid == PJ1203C_REACTIVE_POWER_DP:
+            self.endpoint.electrical_measurement.reactive_power_reported(value)
 
 
 class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
@@ -392,6 +410,9 @@ class PJ1203CChBPowerMeasurement(LocalDataCluster, ElectricalMeasurement):
 
     def current_reported(self, value):
         self._update_attribute(self.CURRENT_ID, value)
+
+    def power_factor_reported(self, value):
+        self._update_attribute(0x0510, value)
 
 
 class PJ1203CChBMetering(LocalDataCluster, Metering):
