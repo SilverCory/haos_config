@@ -12,13 +12,17 @@ from zigpy.zcl.foundation import ZCLAttributeDef
 from zhaquirks import Bus, LocalDataCluster
 from zhaquirks.const import (
     DEVICE_TYPE,
-    ENDPOINT_NAME,
     ENDPOINTS,
     INPUT_CLUSTERS,
     MODELS_INFO,
     OUTPUT_CLUSTERS,
     PROFILE_ID,
 )
+
+try:
+    from zhaquirks.const import ENDPOINT_NAME
+except ImportError:
+    ENDPOINT_NAME = "endpoint_name"
 from zhaquirks.tuya import (
     TuyaManufClusterAttributes,
     TuyaOnOff,
