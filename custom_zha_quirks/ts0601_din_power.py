@@ -148,8 +148,12 @@ class TuyaElectricalMeasurement(LocalDataCluster, Metering):
     CURRENT_RECEIVED_ID = 0x0001
     POWER_WATT = 0x0000
 
-    """Setting unit of measurement."""
-    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT}
+    _CONSTANT_ATTRIBUTES = {
+        0x0300: POWER_WATT,  # unit_of_measure = Wh
+        0x0301: 1,           # multiplier
+        0x0302: 1,           # divisor
+        0x0000: 0,           # current_summ_delivered (seed so ZHA tracks it)
+    }
 
     def energy_deliver_reported(self, value):
         """Summation Energy Deliver reported."""
@@ -427,7 +431,12 @@ class PJ1203CChBMetering(LocalDataCluster, Metering):
 
     CURRENT_DELIVERED_ID = 0x0000
     POWER_WATT = 0x0000
-    _CONSTANT_ATTRIBUTES = {0x0300: POWER_WATT}
+    _CONSTANT_ATTRIBUTES = {
+        0x0300: POWER_WATT,  # unit_of_measure = Wh
+        0x0301: 1,           # multiplier
+        0x0302: 1,           # divisor
+        0x0000: 0,           # current_summ_delivered (seed so ZHA tracks it)
+    }
 
     def energy_reported(self, value):
         self._update_attribute(self.CURRENT_DELIVERED_ID, value)
