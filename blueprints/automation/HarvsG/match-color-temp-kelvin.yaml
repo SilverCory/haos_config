@@ -39,7 +39,7 @@ blueprint:
       selector:
         action: {}
       default:
-      - service: light.turn_on
+      - action: light.turn_on
         data:
           brightness: '{{max(trigger.to_state.attributes.brightness,2)}}'
         target:
@@ -49,8 +49,9 @@ blueprint:
   source_url: https://gist.github.com/HarvsG/cc86381dc99169159d6d4cd870c36e46
 variables:
   target_lights: !input target_lights
-  target_on_lights: '{{states.light | selectattr(''state'',''eq'',''on'') | selectattr(''attributes.supported_color_modes'',''match'',".*color_temp.*")
-    | map(attribute=''entity_id'') | select("in",target_lights) | list }}'
+  target_on_lights: "{{states.light | selectattr('state','eq','on') | selectattr('attributes.supported_color_modes','defined')\n\
+    \  | selectattr('attributes.supported_color_modes','contains','color_temp')\n\
+    \  | map(attribute='entity_id') | select('in',target_lights) | list }}"
   min_color_temp: !input min_color_temp
   max_color_temp: !input max_color_temp
   color_temp: '{{ [([(((4791.67 - 3290.66/(1 + 0.222 * ([([0,state_attr(''sun.sun'',
@@ -78,7 +79,7 @@ action:
     - condition: trigger
       id: single_light_on
     sequence:
-    - service: light.turn_on
+    - action: light.turn_on
       data:
         kelvin: '{{color_temp}}'
       target:
@@ -95,7 +96,7 @@ action:
       - condition: trigger
         id: elevation_change
     sequence:
-    - service: light.turn_on
+    - action: light.turn_on
       data:
         kelvin: '{{color_temp}}'
         transition: 5
