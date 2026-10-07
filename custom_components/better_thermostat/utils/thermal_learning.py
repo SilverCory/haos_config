@@ -20,23 +20,24 @@ from .const import MAX_HEAT_LOSS, MAX_HEATING_POWER, MIN_HEAT_LOSS, MIN_HEATING_
 
 _LOGGER = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Internal constants
-# ---------------------------------------------------------------------------
 _TIMEOUT_MIN: int = 30  # plateau safety timeout (minutes)
 _MIN_CYCLE_DURATION: float = 1.0  # minimum cycle minutes to accept
 _BASE_ALPHA: float = 0.10  # EMA base smoothing factor
 _ALPHA_MIN: float = 0.02
 _ALPHA_MAX: float = 0.25
+# Minutes the heat-loss measurement waits after the cooler stops. The room
+# keeps falling fast for a few minutes (4 in the measured case) while cold air
+# leaves the unit and the sensor catches up; ten minutes covers that tail
+# plus one report interval of a sensor that reports every five minutes.
+_COOLER_SETTLE_MIN: float = 10.0
 
 # Telemetry deque sizes
 _STATS_MAXLEN: int = 10
 _CYCLES_MAXLEN: int = 50
 
 
-# ---------------------------------------------------------------------------
 # Telemetry record types (one entry per finalized cycle / stats sample)
-# ---------------------------------------------------------------------------
 
 
 class HeatingCycle(TypedDict):
@@ -86,9 +87,7 @@ class LossStats(TypedDict):
     loss: float
 
 
-# ---------------------------------------------------------------------------
 # Pure helpers
-# ---------------------------------------------------------------------------
 
 
 def ema_smooth(old: float, new: float, alpha: float) -> float:
@@ -131,9 +130,7 @@ def compute_env_factor(outdoor_temp: float | None, target_temp: float | None) ->
     return clamp(delta_env / 20.0, 0.7, 1.3)
 
 
-# ---------------------------------------------------------------------------
 # Result dataclasses (frozen – no mutation after creation)
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -160,9 +157,7 @@ class HeatLossUpdate:
     cycle_result: CycleResult | None = None
 
 
-# ---------------------------------------------------------------------------
 # HeatingPowerTracker
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -189,9 +184,7 @@ class HeatingPowerTracker:
         default_factory=lambda: deque(maxlen=_CYCLES_MAXLEN)
     )
 
-    # ------------------------------------------------------------------
     # Public API
-    # ------------------------------------------------------------------
 
     def update(
         self,
@@ -256,9 +249,7 @@ class HeatingPowerTracker:
         """Reset heating power to the given default."""
         self.heating_power = value
 
-    # ------------------------------------------------------------------
     # Internals
-    # ------------------------------------------------------------------
 
     def _maybe_finalize(
         self,
@@ -308,7 +299,7 @@ class HeatingPowerTracker:
                 delta_env = max(target_temp - outdoor_temp, 0.1)
                 normalized_power = round((temp_diff / duration_min) / delta_env, 5)
 
-            heating_rate = round(temp_diff / duration_min, 4)
+            heating_rate = temp_diff / duration_min
 
             alpha = clamp(
                 _BASE_ALPHA * weight_factor * env_factor, _ALPHA_MIN, _ALPHA_MAX
@@ -334,7 +325,7 @@ class HeatingPowerTracker:
                     MAX_HEATING_POWER,
                 )
 
-            self.heating_power = round(new_power, 4)
+            self.heating_power = new_power
             self.normalized_power = normalized_power
             power_changed = self.heating_power != old_power
 
@@ -343,10 +334,10 @@ class HeatingPowerTracker:
                 {
                     "dT": round(temp_diff, 2),
                     "min": round(duration_min, 1),
-                    "rate": heating_rate,
+                    "rate": round(heating_rate, 4),
                     "alpha": round(alpha, 3),
                     "envf": round(env_factor, 3),
-                    "hp": self.heating_power,
+                    "hp": round(self.heating_power, 4),
                     "norm": normalized_power,
                 }
             )
@@ -366,7 +357,7 @@ class HeatingPowerTracker:
                     ),
                     "delta_t": round(temp_diff, 3),
                     "minutes": round(duration_min, 2),
-                    "rate_c_min": heating_rate,
+                    "rate_c_min": round(heating_rate, 4),
                     "target": target_temp,
                     "outdoor": outdoor_temp,
                     "norm_power": normalized_power,
@@ -395,9 +386,7 @@ class HeatingPowerTracker:
         return CycleResult(power_changed=power_changed)
 
 
-# ---------------------------------------------------------------------------
 # HeatLossTracker
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -414,14 +403,13 @@ class HeatLossTracker:
     end_temp: float | None = None  # lowest observed temperature
     end_ts: datetime | None = None
     _prev_action: HVACAction | None = None
+    _settle_until: datetime | None = None
     stats: deque[LossStats] = field(default_factory=lambda: deque(maxlen=_STATS_MAXLEN))
     cycles: deque[LossCycle] = field(
         default_factory=lambda: deque(maxlen=_CYCLES_MAXLEN)
     )
 
-    # ------------------------------------------------------------------
     # Public API
-    # ------------------------------------------------------------------
 
     def update(
         self,
@@ -434,14 +422,25 @@ class HeatLossTracker:
         """Process one temperature reading and return what changed."""
         from homeassistant.components.climate.const import HVACAction as _HA
 
-        # Window open → reset tracking
-        if window_open:
+        # The first reading without cooling is the cycle that switches the
+        # cooler off, so the settle window starts there.
+        if self._prev_action == _HA.COOLING and current_action != _HA.COOLING:
+            self._settle_until = now + timedelta(minutes=_COOLER_SETTLE_MIN)
+
+        # An open window or a running cooler drives the drop, so the stretch
+        # it covers says nothing about passive heat loss: reset tracking.
+        if window_open or current_action == _HA.COOLING:
             self.start_temp = None
             self.start_ts = None
             self.end_temp = None
             self.end_ts = None
             self._prev_action = current_action
             return HeatLossUpdate()
+
+        if self._settle_until is not None and now < self._settle_until:
+            self._prev_action = current_action
+            return HeatLossUpdate()
+        self._settle_until = None
 
         # Track idle cooling
         if current_action != _HA.HEATING:
@@ -462,9 +461,7 @@ class HeatLossTracker:
         self._prev_action = current_action
         return HeatLossUpdate(cycle_result=cycle_result)
 
-    # ------------------------------------------------------------------
     # Internals
-    # ------------------------------------------------------------------
 
     def _finalize(self) -> CycleResult:
         """Evaluate the completed idle-cooling cycle."""
@@ -480,7 +477,7 @@ class HeatLossTracker:
                 duration_min = 0.0
 
             if duration_min >= _MIN_CYCLE_DURATION and temp_drop > 0:
-                loss_rate = round(temp_drop / duration_min, 5)
+                loss_rate = temp_drop / duration_min
 
                 # Adaptive smoothing (alpha is always base for heat loss)
                 alpha = clamp(_BASE_ALPHA, _ALPHA_MIN, _ALPHA_MAX)
@@ -504,16 +501,16 @@ class HeatLossTracker:
                         MAX_HEAT_LOSS,
                     )
 
-                self.heat_loss_rate = round(new_loss, 5)
+                self.heat_loss_rate = new_loss
                 loss_changed = self.heat_loss_rate != old_loss
 
                 self.stats.append(
                     {
                         "dT": round(temp_drop, 2),
                         "min": round(duration_min, 1),
-                        "rate": loss_rate,
+                        "rate": round(loss_rate, 5),
                         "alpha": round(alpha, 3),
-                        "loss": self.heat_loss_rate,
+                        "loss": round(self.heat_loss_rate, 5),
                     }
                 )
 
@@ -531,7 +528,7 @@ class HeatLossTracker:
                             if self.end_temp is not None
                             else None
                         ),
-                        "rate": loss_rate,
+                        "rate": round(loss_rate, 5),
                     }
                 )
 
