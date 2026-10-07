@@ -566,6 +566,10 @@
       entity_id: climate.hall
       attribute: temperature
       above: 25
+  - condition: template
+    value_template: >
+      {{ state_attr('climate.hall', 'temperature') | float(0) >
+         state_attr('climate.house_thermostat', 'temperature') | float(0) }}
   actions:
   - if:
     - condition: template
