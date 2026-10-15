@@ -4,6 +4,8 @@ This module implements the minimal adapter interface required by the
 Better Thermostat integration for deCONZ-controlled TRV devices.
 """
 
+from __future__ import annotations
+
 import logging
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -14,6 +16,12 @@ from .generic import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# deCONZ expresses a thermostat's ``config/offset`` in hundredths of a degree,
+# the same encoding it uses for ``heatsetpoint`` and the measured temperature:
+# the value 250 is 2.5 K. Every offset crossing this adapter is in Kelvin, so
+# the wire value is scaled on the way out and back on the way in.
+OFFSET_UNITS_PER_KELVIN = 100
 
 
 async def get_info(self, entity_id):
@@ -52,8 +60,8 @@ async def get_current_offset(self, entity_id):
     if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
         return 0.0
     try:
-        return float(str(state.attributes.get("offset", 0)))
-    except (ValueError, TypeError):
+        return float(str(state.attributes.get("offset", 0))) / OFFSET_UNITS_PER_KELVIN
+    except ValueError, TypeError:
         _LOGGER.warning(
             "better_thermostat %s: Could not convert calibration offset '%s' to float, using 0",
             self.device_name,
@@ -77,16 +85,41 @@ async def get_max_offset(self, entity_id):
     return 6
 
 
-async def set_offset(self, entity_id, offset):
-    """Set new target offset."""
+async def set_offset(self, entity_id, offset) -> bool:
+    """Write a calibration offset through the deCONZ configure service.
+
+    deCONZ counts the offset in hundredths of a Kelvin, so the Kelvin value is
+    scaled by ``OFFSET_UNITS_PER_KELVIN`` here. The ``configure`` service
+    forwards that payload to the REST API unaltered.
+
+    Parameters
+    ----------
+    self : BetterThermostat
+        The Better Thermostat climate entity instance
+    entity_id : str
+        Entity ID of the TRV to write to
+    offset : float
+        Calibration offset in Kelvin
+
+    Returns
+    -------
+    bool
+        True once the write went out. The offset rides on the TRV's own
+        service call, so every deCONZ TRV has the channel.
+    """
     await self.hass.services.async_call(
         "deconz",
         "configure",
-        {"entity": entity_id, "field": "/config", "data": {"offset": offset}},
+        {
+            "entity": entity_id,
+            "field": "/config",
+            "data": {"offset": round(offset * OFFSET_UNITS_PER_KELVIN)},
+        },
         blocking=True,
         context=self.context,
     )
-    self.real_trvs[entity_id]["last_calibration"] = offset
+    self.real_trvs[entity_id].last_calibration = offset
+    return True
 
 
 async def set_valve(self, entity_id, valve):
