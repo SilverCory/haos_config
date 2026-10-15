@@ -8,15 +8,21 @@
           "name": "Nome",
           "thermostat": "Il termostato reale",
           "cooler": "Il dispositivo di raffreddamento (opzionale)",
+          "min_cooler_resend_interval": "Secondi minimi tra comandi ripetuti al raffreddatore (0 = disattivato)",
           "temperature_sensor": "Sensore di temperatura",
           "humidity_sensor": "Sensore di umidità",
           "window_sensors": "Sensore finestra",
+          "door_sensors": "Sensore porta",
           "off_temperature": "Temperatura esterna alla quale il termostato si spegne",
           "tolerance": "Tolleranza, per evitare che il termostato si accenda e spenga troppo spesso.",
           "window_off_delay": "Ritardo prima che il termostato si spenga quando la finestra viene aperta",
           "window_off_delay_after": "Ritardo prima che il termostato si riaccenda quando la finestra viene chiusa",
+          "door_off_delay": "Ritardo prima che il termostato si spenga quando la porta viene aperta",
+          "door_off_delay_after": "Ritardo prima che il termostato si riaccenda quando la porta viene chiusa",
           "outdoor_sensor": "Se hai un sensore esterno, puoi usarlo per ottenere la temperatura esterna",
           "weather": "La tua entità meteo per ottenere la temperatura esterna",
+          "target_temp_min": "Temperatura target minima",
+          "target_temp_max": "Temperatura target massima",
           "target_temp_step": "Passo della temperatura target",
           "presets": "Preset abilitati"
         },
@@ -34,7 +40,8 @@
           "valve_maintenance": "Se il tuo termostato non ha una modalità di manutenzione propria, puoi usare questa",
           "calibration": "Tipo di calibrazione",
           "calibration_mode": "Modalità di calibrazione",
-          "no_off_system_mode": "Se il tuo TRV non può gestire la modalità 'off', puoi abilitare questa opzione per usare 5°C come temperatura target"
+          "no_off_system_mode": "Se il tuo TRV non può gestire la modalità 'off', puoi abilitare questa opzione per usare 5°C come temperatura target",
+          "mpc_v2_plant_preset": "MPC v2 dimensione della stanza"
         },
         "data_description": {
           "protect_overheating": "Alcuni TRV non chiudono completamente la valvola quando si raggiunge la temperatura. Oppure il radiatore mantiene molto calore residuo. Questa opzione può evitare il surriscaldamento.",
@@ -50,12 +57,17 @@
     "error": {
       "failed": "Qualcosa è andato storto.",
       "no_name": "Per favore inserisci un nome.",
+      "no_heater": "Seleziona almeno un vero termostato.",
       "no_off_mode": "Il tuo dispositivo è particolare e non ha una modalità 'off' :(\nBetter Thermostat userà invece la temperatura target minima.",
-      "no_outside_temp": "Non hai un sensore di temperatura esterna. Better Thermostat userà l’entità meteo al suo posto."
+      "target_temp_min_above_max": "La temperatura target minima non deve superare la temperatura target massima.",
+      "no_outside_temp": "Non hai un sensore di temperatura esterna. Better Thermostat userà l’entità meteo al suo posto.",
+      "no_data": "Nessun dato ricevuto. Riprova."
     },
     "abort": {
       "single_instance_allowed": "È consentito un solo termostato per ogni dispositivo reale.",
-      "no_devices_found": "Nessuna entità termostato trovata. Assicurati di avere un’entità climate nel tuo Home Assistant"
+      "no_devices_found": "Nessuna entità termostato trovata. Assicurati di avere un’entità climate nel tuo Home Assistant",
+      "already_configured": "Un Better Thermostat con questo nome controlla già questi termostati.",
+      "trv_in_use": "{trv} è già controllato dal Better Thermostat {entry}. Un termostato può appartenere a un solo Better Thermostat; rimuovilo prima da lì."
     }
   },
   "options": {
@@ -68,19 +80,25 @@
           "temperature_sensor": "Sensore di temperatura",
           "humidity_sensor": "Sensore di umidità",
           "window_sensors": "Sensore finestra",
+          "door_sensors": "Sensore porta",
           "off_temperature": "Temperatura esterna alla quale il termostato si spegne",
           "tolerance": "Tolleranza, per evitare che il termostato si accenda e spenga troppo spesso.",
           "window_off_delay": "Ritardo prima che il termostato si spenga quando la finestra viene aperta",
           "window_off_delay_after": "Ritardo prima che il termostato si riaccenda quando la finestra viene chiusa",
+          "door_off_delay": "Ritardo prima che il termostato si spenga quando la porta viene aperta",
+          "door_off_delay_after": "Ritardo prima che il termostato si riaccenda quando la porta viene chiusa",
           "outdoor_sensor": "Se hai un sensore esterno, puoi usarlo per ottenere la temperatura esterna",
           "weather": "La tua entità meteo per ottenere la temperatura esterna",
+          "target_temp_min": "Temperatura target minima",
+          "target_temp_max": "Temperatura target massima",
           "target_temp_step": "Passo della temperatura target",
           "presets": "Preset abilitati",
           "valve_maintenance": "Se il tuo termostato non ha una modalità di manutenzione propria, puoi usare questa",
           "calibration": "Tipo di calibrazione",
           "heat_auto_swapped": "Se 'auto' indica riscaldamento per il tuo TRV e vuoi invertirlo",
           "child_lock": "Ignora tutti gli input sul TRV come un blocco bambini",
-          "homematicip": "Se usi HomematicIP, abilita questa opzione per rallentare le richieste e prevenire il ciclo di lavoro"
+          "homematicip": "Se usi HomematicIP, abilita questa opzione per rallentare le richieste e prevenire il ciclo di lavoro",
+          "cooler": "Il dispositivo di raffreddamento (opzionale)"
         },
         "data_description": {
           "presets": "Seleziona i preset che vuoi rendere disponibili per questo termostato."
@@ -96,7 +114,8 @@
           "valve_maintenance": "Se il tuo termostato non ha una modalità di manutenzione propria, puoi usare questa",
           "calibration": "Tipo di calibrazione che vuoi usare",
           "calibration_mode": "Modalità di calibrazione",
-          "no_off_system_mode": "Se il tuo TRV non può gestire la modalità 'off', puoi abilitare questa opzione per usare 5°C come temperatura target"
+          "no_off_system_mode": "Se il tuo TRV non può gestire la modalità 'off', puoi abilitare questa opzione per usare 5°C come temperatura target",
+          "mpc_v2_plant_preset": "MPC v2 dimensione della stanza"
         },
         "data_description": {
           "protect_overheating": "Alcuni TRV non chiudono completamente la valvola quando si raggiunge la temperatura. Oppure il radiatore mantiene molto calore residuo. Questa opzione può evitare il surriscaldamento.",
@@ -104,6 +123,17 @@
           "calibration": "Come deve essere applicata la calibrazione sul TRV (temperatura target o offset)\n***Basata sulla temperatura target***: Applica la calibrazione alla temperatura impostata.\n***Basata su offset***: Applica la calibrazione come offset."
         }
       }
+    },
+    "error": {
+      "failed": "Qualcosa è andato storto.",
+      "no_name": "Per favore inserisci un nome.",
+      "no_heater": "Seleziona almeno un vero termostato.",
+      "no_off_mode": "Il tuo dispositivo è particolare e non ha una modalità 'off' :(\nBetter Thermostat userà invece la temperatura target minima.",
+      "target_temp_min_above_max": "La temperatura target minima non deve superare la temperatura target massima.",
+      "no_outside_temp": "Non hai un sensore di temperatura esterna. Better Thermostat userà l’entità meteo al suo posto.",
+      "no_data": "Nessun dato ricevuto. Riprova.",
+      "no_sensor": "Seleziona un sensore di temperatura ambiente.",
+      "trv_in_use": "{trv} è già controllato dal Better Thermostat {entry}. Un termostato può appartenere a un solo Better Thermostat."
     }
   },
   "issues": {
@@ -125,6 +155,18 @@
     "invalid_window_state": {
       "title": "BT: {name} - stato del sensore finestra non valido",
       "description": "Il sensore finestra per Better Thermostat {name} ha riportato uno stato non riconosciuto: {state}.\n\nGli stati previsti sono: 'on', 'off', 'true', 'false', 'open', 'closed'.\n\nControlla la configurazione del sensore finestra."
+    },
+    "invalid_door_state": {
+      "title": "BT: {name} - stato del sensore porta non valido",
+      "description": "Il sensore porta per Better Thermostat {name} ha riportato uno stato non riconosciuto: {state}.\n\nGli stati previsti sono: 'on', 'off', 'true', 'false', 'open', 'closed'.\n\nControlla la configurazione del sensore porta."
+    },
+    "invalid_external_temperature": {
+      "title": "BT: {name} - temperatura esterna non valida",
+      "description": "Il sensore di temperatura esterna per Better Thermostat {name} ha riportato un valore non plausibile: {value}.\n\nLa lettura era al di fuori dell'intervallo plausibile ed è stata ignorata. Controlla la configurazione del sensore di temperatura."
+    },
+    "shared_trv": {
+      "title": "BT: {trv} è controllato da più di un Better Thermostat",
+      "description": "Il termostato {trv} appartiene a questi Better Thermostat: {entries}. Gli inviano temperature obiettivo e modalità in conflitto. Rimuovilo da tutti tranne uno nelle loro impostazioni; poi questo problema scompare da solo."
     }
   },
   "services": {
@@ -138,12 +180,8 @@
     },
     "reset_pid_learnings": {
       "name": "Reimposta l'apprendimento PID",
-      "description": "Cancella tutto lo stato PID appreso (e facoltativamente i limiti di apertura appresi) per questa entità.",
+      "description": "Cancella tutto lo stato PID appreso per questa entità.",
       "fields": {
-        "include_open_caps": {
-          "name": "Cancella anche i limiti di apertura appresi",
-          "description": "Se abilitato, cancella anche le percentuali di apertura min/max apprese per TRV/intervallo di target."
-        },
         "apply_pid_defaults": {
           "name": "Applica i valori PID predefiniti dopo il reset",
           "description": "Se abilitato, preimposta gli intervalli di target correnti con i guadagni PID predefiniti (kp/ki/kd). Puoi sovrascrivere i valori predefiniti qui sotto."
@@ -174,6 +212,136 @@
         "sleep": "Notte",
         "activity": "Attività"
       }
+    },
+    "target_temp_min": {
+      "options": {
+        "auto": "Automatico",
+        "min_max_0": "0 °C",
+        "min_max_1": "1 °C",
+        "min_max_2": "2 °C",
+        "min_max_3": "3 °C",
+        "min_max_4": "4 °C",
+        "min_max_5": "5 °C",
+        "min_max_6": "6 °C",
+        "min_max_7": "7 °C",
+        "min_max_8": "8 °C",
+        "min_max_9": "9 °C",
+        "min_max_10": "10 °C",
+        "min_max_11": "11 °C",
+        "min_max_12": "12 °C",
+        "min_max_13": "13 °C",
+        "min_max_14": "14 °C",
+        "min_max_15": "15 °C",
+        "min_max_16": "16 °C",
+        "min_max_17": "17 °C",
+        "min_max_18": "18 °C",
+        "min_max_19": "19 °C",
+        "min_max_20": "20 °C",
+        "min_max_21": "21 °C",
+        "min_max_22": "22 °C",
+        "min_max_23": "23 °C",
+        "min_max_24": "24 °C",
+        "min_max_25": "25 °C",
+        "min_max_26": "26 °C",
+        "min_max_27": "27 °C",
+        "min_max_28": "28 °C",
+        "min_max_29": "29 °C",
+        "min_max_30": "30 °C",
+        "min_max_31": "31 °C",
+        "min_max_32": "32 °C",
+        "min_max_33": "33 °C",
+        "min_max_34": "34 °C",
+        "min_max_35": "35 °C",
+        "min_max_36": "36 °C",
+        "min_max_37": "37 °C",
+        "min_max_38": "38 °C",
+        "min_max_39": "39 °C",
+        "min_max_40": "40 °C"
+      }
+    },
+    "target_temp_max": {
+      "options": {
+        "auto": "Automatico",
+        "min_max_0": "0 °C",
+        "min_max_1": "1 °C",
+        "min_max_2": "2 °C",
+        "min_max_3": "3 °C",
+        "min_max_4": "4 °C",
+        "min_max_5": "5 °C",
+        "min_max_6": "6 °C",
+        "min_max_7": "7 °C",
+        "min_max_8": "8 °C",
+        "min_max_9": "9 °C",
+        "min_max_10": "10 °C",
+        "min_max_11": "11 °C",
+        "min_max_12": "12 °C",
+        "min_max_13": "13 °C",
+        "min_max_14": "14 °C",
+        "min_max_15": "15 °C",
+        "min_max_16": "16 °C",
+        "min_max_17": "17 °C",
+        "min_max_18": "18 °C",
+        "min_max_19": "19 °C",
+        "min_max_20": "20 °C",
+        "min_max_21": "21 °C",
+        "min_max_22": "22 °C",
+        "min_max_23": "23 °C",
+        "min_max_24": "24 °C",
+        "min_max_25": "25 °C",
+        "min_max_26": "26 °C",
+        "min_max_27": "27 °C",
+        "min_max_28": "28 °C",
+        "min_max_29": "29 °C",
+        "min_max_30": "30 °C",
+        "min_max_31": "31 °C",
+        "min_max_32": "32 °C",
+        "min_max_33": "33 °C",
+        "min_max_34": "34 °C",
+        "min_max_35": "35 °C",
+        "min_max_36": "36 °C",
+        "min_max_37": "37 °C",
+        "min_max_38": "38 °C",
+        "min_max_39": "39 °C",
+        "min_max_40": "40 °C"
+      }
+    },
+    "target_temp_step": {
+      "options": {
+        "auto_legacy": "Automatico (precedente)",
+        "auto": "Automatico",
+        "step_0_1": "0,1 °C",
+        "step_0_2": "0,2 °C",
+        "step_0_25": "0,25 °C",
+        "step_0_5": "0,5 °C",
+        "step_1_0": "1 °C"
+      }
+    },
+    "calibration_mode": {
+      "options": {
+        "heating_power_calibration": "IA basata sul tempo (predefinito)",
+        "default": "Solo offset sensore esterno",
+        "mpc_calibration": "MPC predittivo (beta)",
+        "mpc_v2_calibration": "(IA) MPC v2 (QP + Kalman, sperimentale)",
+        "fix_calibration": "Aggressivo",
+        "tpi_calibration": "Controller TPI",
+        "pid_calibration": "Controller PID",
+        "no_calibration": "Nessuna calibrazione"
+      }
+    },
+    "calibration_type": {
+      "options": {
+        "direct_valve_based": "Controllo diretto della valvola",
+        "target_temp_based": "Basato sulla temperatura obiettivo",
+        "local_calibration_based": "Basato sull’offset"
+      }
+    },
+    "mpc_v2_plant_preset": {
+      "options": {
+        "auto": "Automatico (usa il tasso di dispersione appreso)",
+        "small_room": "Stanza piccola (~10 m², risposta rapida)",
+        "medium_room": "Stanza media (~20 m², standard)",
+        "large_room": "Stanza grande (~40 m², involucro lento)"
+      }
     }
   },
   "entity": {
@@ -195,6 +363,75 @@
       },
       "pid_kd_no_trv": {
         "name": "PID Kd (derivativo)"
+      },
+      "preset_eco": {
+        "name": "Eco"
+      },
+      "preset_eco_min": {
+        "name": "Eco Min"
+      },
+      "preset_eco_max": {
+        "name": "Eco Max"
+      },
+      "preset_away": {
+        "name": "Fuori casa"
+      },
+      "preset_away_min": {
+        "name": "Fuori casa Min"
+      },
+      "preset_away_max": {
+        "name": "Fuori casa Max"
+      },
+      "preset_boost": {
+        "name": "Boost"
+      },
+      "preset_boost_min": {
+        "name": "Boost Min"
+      },
+      "preset_boost_max": {
+        "name": "Boost Max"
+      },
+      "preset_comfort": {
+        "name": "Comfort"
+      },
+      "preset_comfort_min": {
+        "name": "Comfort Min"
+      },
+      "preset_comfort_max": {
+        "name": "Comfort Max"
+      },
+      "preset_home": {
+        "name": "A casa"
+      },
+      "preset_home_min": {
+        "name": "A casa Min"
+      },
+      "preset_home_max": {
+        "name": "A casa Max"
+      },
+      "preset_sleep": {
+        "name": "Notte"
+      },
+      "preset_sleep_min": {
+        "name": "Notte Min"
+      },
+      "preset_sleep_max": {
+        "name": "Notte Max"
+      },
+      "preset_activity": {
+        "name": "Attività"
+      },
+      "preset_activity_min": {
+        "name": "Attività Min"
+      },
+      "preset_activity_max": {
+        "name": "Attività Max"
+      },
+      "valve_max_opening": {
+        "name": "{trv_name}: apertura massima della valvola"
+      },
+      "valve_max_opening_no_trv": {
+        "name": "Apertura massima della valvola"
       }
     },
     "switch": {
@@ -209,6 +446,66 @@
       },
       "child_lock_no_trv": {
         "name": "Blocco bambini"
+      }
+    },
+    "sensor": {
+      "logbook": {
+        "state": {
+          "window_open": "spento perché una finestra è stata aperta",
+          "window_close": "riscaldamento ripreso perché una finestra è stata chiusa",
+          "summer_mode_on": "spento perché la temperatura esterna è troppo alta",
+          "summer_mode_off": "riscaldamento ripreso perché la temperatura esterna è scesa",
+          "weather_forecast_missing": "riscaldamento ripreso perché le previsioni meteo non sono disponibili",
+          "degraded_mode_entered": "è entrato in modalità degradata perché alcuni sensori non sono disponibili",
+          "degraded_mode_resolved": "è uscito dalla modalità degradata perché tutti i sensori sono disponibili",
+          "door_open": "turned off because a door was opened",
+          "door_close": "resumed heating because a door was closed"
+        }
+      },
+      "external_temp_ema": {
+        "name": "Temperatura EMA"
+      },
+      "external_temp_ema_1h": {
+        "name": "Temperatura EMA (1 ora)"
+      },
+      "temp_slope": {
+        "name": "Variazione della temperatura"
+      },
+      "heating_power": {
+        "name": "Potenza di riscaldamento"
+      },
+      "heat_loss": {
+        "name": "Perdita di calore"
+      },
+      "virtual_temp": {
+        "name": "Temperatura virtuale"
+      },
+      "mpc_gain": {
+        "name": "Guadagno di riscaldamento MPC"
+      },
+      "mpc_loss": {
+        "name": "Perdita di calore MPC"
+      },
+      "mpc_ka": {
+        "name": "Isolamento MPC (Ka)"
+      },
+      "pid_kp": {
+        "name": "PID Kp"
+      },
+      "pid_ki": {
+        "name": "PID Ki"
+      },
+      "pid_kd": {
+        "name": "PID Kd"
+      },
+      "pid_output": {
+        "name": "Uscita PID"
+      },
+      "pid_error": {
+        "name": "Errore PID"
+      },
+      "solar_intensity": {
+        "name": "Apporto di calore solare"
       }
     }
   },
