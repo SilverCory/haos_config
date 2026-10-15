@@ -4,9 +4,16 @@ Provides small fixes and device behavior adjustments required for the
 Bosch BTH-RM when operated through Home Assistant integrations.
 """
 
+from __future__ import annotations
+
 import logging
 
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
+
+from custom_components.better_thermostat.utils.helpers import (
+    celsius_to_system_temperature,
+    supports_temperature_range,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +35,44 @@ def fix_target_temperature_calibration(self, entity_id, temperature):
     return temperature
 
 
+async def _write_setpoint(self, entity_id, payload):
+    """Put one setpoint payload on the wire.
+
+    A device that is asleep or out of reach, an integration reloading its
+    config entry, and an entity that declares no support for the attributes
+    in the payload all answer a blocking service call with an error; that is
+    reported as a refused write so the caller can fall back to the generic
+    adapter, which carries the retry handling.
+
+    Parameters
+    ----------
+    self :
+        self instance of better_thermostat
+    entity_id : str
+        Entity ID of the TRV the payload is addressed to
+    payload : dict
+        Service data for ``climate.set_temperature``
+
+    Returns
+    -------
+    bool
+        True once the device took the write, False when it refused
+    """
+    try:
+        await self.hass.services.async_call(
+            "climate", "set_temperature", payload, blocking=True, context=self.context
+        )
+    except (HomeAssistantError, OSError) as ex:
+        _LOGGER.warning(
+            "better_thermostat %s: BTH-RM setpoint write for %s failed: %s",
+            self.device_name,
+            entity_id,
+            ex,
+        )
+        return False
+    return True
+
+
 async def override_set_hvac_mode(self, entity_id, hvac_mode):
     """No special HVAC mode override for BTH-RM."""
     return False
@@ -36,64 +81,67 @@ async def override_set_hvac_mode(self, entity_id, hvac_mode):
 async def override_set_temperature(self, entity_id, temperature):
     """Handle BTH-RM set_temperature quirk.
 
-    If the device reports both 'heat' and 'cool' modes, call set_temperature
-    with both `target_temp_high` and `target_temp_low` set to the same value.
+    When the range setpoint feature is active, the device's heating
+    logic is driven by target_temp_low rather than the single
+    'temperature' field. The live supported_features bitmask is
+    checked for TARGET_TEMPERATURE_RANGE, and if present, both
+    target_temp_high and target_temp_low are written so the device
+    actually reacts.
+
+    Parameters
+    ----------
+    self :
+            self instance of better_thermostat
+    entity_id : str
+            entity_id of the TRV
+    temperature : float
+            the target temperature to set, in Celsius (converted to the
+            system unit before the write)
+
+    Returns
+    -------
+    bool
+            True once the setpoint write went out, so the caller does not
+            need the generic adapter fallback (a plain temperature write
+            when the entity has no current state or no range support, a
+            range write otherwise). False when the device refused it: the
+            adapter write then carries the setpoint instead, with its own
+            step rounding and retry handling.
     """
-    model = self.real_trvs[entity_id]["model"]
-    if model == "BTH-RM":
+    temperature = celsius_to_system_temperature(self.hass, temperature)
+    state = self.hass.states.get(entity_id)
+    if state is None:
         _LOGGER.debug(
-            "better_thermostat %s: TRV %s device quirk bth-rm for set_temperature active",
+            "better_thermostat %s: TRV %s has no current state, "
+            "falling back to simple set_temperature",
             self.device_name,
             entity_id,
         )
-        entity_reg = er.async_get(self.hass)
-        entry = entity_reg.async_get(entity_id)
-
-        if entry is None:
-            _LOGGER.debug(
-                "better_thermostat %s: TRV %s not found in entity registry, "
-                "falling back to simple set_temperature",
-                self.device_name,
-                entity_id,
-            )
-            await self.hass.services.async_call(
-                "climate",
-                "set_temperature",
-                {"entity_id": entity_id, "temperature": temperature},
-                blocking=True,
-                context=self.context,
-            )
-            return True
-
-        hvac_modes = (
-            entry.capabilities.get("hvac_modes", []) if entry.capabilities else []
+        return await _write_setpoint(
+            self, entity_id, {"entity_id": entity_id, "temperature": temperature}
         )
 
-        _LOGGER.debug(
-            "better_thermostat %s: TRV %s device quirk bth-rm found hvac_modes %s",
-            self.device_name,
+    _supports_range = supports_temperature_range(state)
+
+    _LOGGER.debug(
+        "better_thermostat %s: TRV %s device quirk bth-rm "
+        "found supported_features %s (range=%s)",
+        self.device_name,
+        entity_id,
+        state.attributes.get("supported_features", 0),
+        _supports_range,
+    )
+
+    if _supports_range:
+        return await _write_setpoint(
+            self,
             entity_id,
-            hvac_modes,
+            {
+                "entity_id": entity_id,
+                "target_temp_high": temperature,
+                "target_temp_low": temperature,
+            },
         )
-
-        if entry.platform == "mqtt" and "cool" in hvac_modes and "heat" in hvac_modes:
-            await self.hass.services.async_call(
-                "climate",
-                "set_temperature",
-                {
-                    "entity_id": entity_id,
-                    "target_temp_high": temperature,
-                    "target_temp_low": temperature,
-                },
-                blocking=True,
-                context=self.context,
-            )
-        else:
-            await self.hass.services.async_call(
-                "climate",
-                "set_temperature",
-                {"entity_id": entity_id, "temperature": temperature},
-                blocking=True,
-                context=self.context,
-            )
-    return True
+    return await _write_setpoint(
+        self, entity_id, {"entity_id": entity_id, "temperature": temperature}
+    )
