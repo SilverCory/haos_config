@@ -2,7 +2,14 @@
 
 These helpers implement safe no-op defaults for devices that do not
 require specific quirks.
+
+There is no ``override_set_valve`` among them. Callers probe for that
+one with ``getattr`` and read a hit as "this model drives its valve
+itself", so an implementation here would claim valve support for every
+device without a quirk file of its own.
 """
+
+from __future__ import annotations
 
 import logging
 
@@ -10,9 +17,32 @@ from homeassistant.components.lock import LockState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 
+from ..utils.helpers import find_device_entity
+
 _LOGGER = logging.getLogger(__name__)
 
 VALVE_MAINTENANCE_INTERVAL_HOURS = 168  # Default: 7 days
+
+
+def trv_state_unknown_as_available(self, entity_id):
+    """Return True if this TRV is operating when its Climate entity state is STATE_UNKNOWN.
+
+    This default implementation always returns ``False`` without delegating
+    to another model quirks implementation.
+
+    Parameters
+    ----------
+    self : BetterThermostat
+        Better Thermostat instance. It is unused by the default policy.
+    entity_id : str
+        TRV entity identifier. It is unused by the default policy.
+
+    Returns
+    -------
+    bool
+        Always ``False``.
+    """
+    return False
 
 
 def fix_local_calibration(self, entity_id, offset):
@@ -40,12 +70,7 @@ async def override_set_temperature(self, entity_id, temperature):
     return False
 
 
-async def override_set_valve(self, entity_id, percent: int):
-    """Do not override valve by default."""
-    return False
-
-
-async def inital_tweak(self, entity_id):
+async def initial_tweak(self, entity_id):
     """Run initial tweaks for the device."""
     entity_registry = er.async_get(self.hass)
     reg_entity = entity_registry.async_get(entity_id)
@@ -54,20 +79,7 @@ async def inital_tweak(self, entity_id):
         device_id = reg_entity.device_id
 
         def find_entity(domains, keywords):
-            for ent in entity_registry.entities.values():
-                if ent.device_id != device_id or ent.domain not in domains:
-                    continue
-                name = (getattr(ent, "original_name", "") or "").lower()
-                uid = (ent.unique_id or "").lower()
-                eid = (ent.entity_id or "").lower()
-
-                if (
-                    any(k in name for k in keywords)
-                    or any(k in uid for k in keywords)
-                    or any(k in eid for k in keywords)
-                ):
-                    return ent.entity_id
-            return None
+            return find_device_entity(entity_registry, device_id, domains, keywords)
 
         # 1. Local calibration -> 0
         cal_entity = find_entity(
@@ -82,7 +94,11 @@ async def inital_tweak(self, entity_id):
                     cal_entity,
                 )
                 await self.hass.services.async_call(
-                    "number", "set_value", {"entity_id": cal_entity, "value": 0}
+                    "number",
+                    "set_value",
+                    {"entity_id": cal_entity, "value": 0},
+                    blocking=True,
+                    context=self.context,
                 )
             except Exception as e:
                 _LOGGER.warning(
@@ -93,7 +109,7 @@ async def inital_tweak(self, entity_id):
                 )
 
         # 2. Child lock sync setting
-        child_lock_setting = self.real_trvs[entity_id]["advanced"].get("child_lock")
+        child_lock_setting = self.real_trvs[entity_id].advanced.get("child_lock")
         if child_lock_setting is not None:
             # Look for switch (Z2M) or lock
             cl_entity = find_entity(
@@ -115,7 +131,11 @@ async def inital_tweak(self, entity_id):
                             )
                             service = "turn_on" if child_lock_setting else "turn_off"
                             await self.hass.services.async_call(
-                                "switch", service, {"entity_id": cl_entity}
+                                "switch",
+                                service,
+                                {"entity_id": cl_entity},
+                                blocking=True,
+                                context=self.context,
                             )
                     elif domain == "lock":
                         target_lock = (
@@ -133,7 +153,11 @@ async def inital_tweak(self, entity_id):
                             )
                             service = "lock" if child_lock_setting else "unlock"
                             await self.hass.services.async_call(
-                                "lock", service, {"entity_id": cl_entity}
+                                "lock",
+                                service,
+                                {"entity_id": cl_entity},
+                                blocking=True,
+                                context=self.context,
                             )
                 except Exception as e:
                     _LOGGER.warning(
@@ -159,7 +183,11 @@ async def inital_tweak(self, entity_id):
                         win_entity,
                     )
                     await self.hass.services.async_call(
-                        "switch", "turn_off", {"entity_id": win_entity}
+                        "switch",
+                        "turn_off",
+                        {"entity_id": win_entity},
+                        blocking=True,
+                        context=self.context,
                     )
             except Exception as e:
                 _LOGGER.warning(
@@ -184,7 +212,11 @@ async def inital_tweak(self, entity_id):
                         away_entity,
                     )
                     await self.hass.services.async_call(
-                        "switch", "turn_off", {"entity_id": away_entity}
+                        "switch",
+                        "turn_off",
+                        {"entity_id": away_entity},
+                        blocking=True,
+                        context=self.context,
                     )
             except Exception as e:
                 _LOGGER.warning(
