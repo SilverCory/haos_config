@@ -1,27 +1,34 @@
 """Better Thermostat Switch Platform."""
 
+from __future__ import annotations
+
+from collections.abc import Mapping
 import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, restore_state
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import RestoredExtraData, RestoreEntity
 
 # Import tracking variables from sensor.py
-from .sensor import _ACTIVE_SWITCH_ENTITIES
+from .sensor import _ACTIVE_SWITCH_ENTITIES, remove_unclaimed_registry_entries
 from .utils.calibration.pid import (
-    _PID_STATES,
     DEFAULT_PID_AUTO_TUNE,
     build_pid_key,
     resolve_unique_id,
 )
-from .utils.const import CONF_CALIBRATION_MODE, CalibrationMode
+from .utils.const import CONF_CALIBRATION_MODE, CONF_CHILD_LOCK, DOMAIN, CalibrationMode
+from .utils.helpers import (
+    TrvNamedEntity,
+    async_normalize_bt_entity_ids,
+    current_trv_name,
+    find_device_entity,
+)
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = "better_thermostat"
 
 
 async def async_setup_entry(
@@ -36,14 +43,14 @@ async def async_setup_entry(
     switch_unique_ids = {}
     has_multiple_trvs = len(bt_climate.real_trvs) > 1
     for trv_entity_id, trv_data in bt_climate.real_trvs.items():
-        advanced = trv_data.get("advanced", {})
+        advanced = trv_data.advanced or {}
         calibration_mode = advanced.get(CONF_CALIBRATION_MODE)
 
         # Normalize string values to CalibrationMode enum
         try:
             if isinstance(calibration_mode, str):
                 calibration_mode = CalibrationMode(calibration_mode)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # Invalid or unknown calibration mode, skip PID creation
             calibration_mode = None
 
@@ -75,10 +82,18 @@ async def async_setup_entry(
         len(switch_unique_ids),
     )
 
+    remove_unclaimed_registry_entries(
+        er.async_get(hass),
+        entry,
+        Platform.SWITCH,
+        (switch.unique_id for switch in switches),
+        bt_climate,
+    )
+    async_normalize_bt_entity_ids(hass, entry, Platform.SWITCH)
     async_add_entities(switches)
 
 
-class BetterThermostatPIDAutoTuneSwitch(SwitchEntity, RestoreEntity):
+class BetterThermostatPIDAutoTuneSwitch(TrvNamedEntity, SwitchEntity, RestoreEntity):
     """Switch for PID Auto Tune."""
 
     _attr_has_entity_name = True
@@ -92,12 +107,17 @@ class BetterThermostatPIDAutoTuneSwitch(SwitchEntity, RestoreEntity):
         self._attr_unique_id = f"{bt_climate.unique_id}_{trv_entity_id}_pid_auto_tune"
 
         if show_trv_name:
-            trv_state = bt_climate.hass.states.get(trv_entity_id)
-            trv_name = trv_state.name if trv_state and trv_state.name else trv_entity_id
             self._attr_translation_key = "pid_auto_tune"
-            self._attr_translation_placeholders = {"trv_name": trv_name}
+            self._attr_translation_placeholders = {
+                "trv_name": current_trv_name(bt_climate.hass, trv_entity_id)
+            }
         else:
             self._attr_translation_key = "pid_auto_tune_no_trv"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        self._follow_trv_name()
 
     @property
     def device_info(self):
@@ -108,11 +128,12 @@ class BetterThermostatPIDAutoTuneSwitch(SwitchEntity, RestoreEntity):
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         # Try to get the value from the current active PID state
-        key = build_pid_key(self._bt_climate, self._trv_entity_id)
-        pid_state = _PID_STATES.get(key)
-
-        if pid_state is not None and pid_state.auto_tune is not None:
-            return pid_state.auto_tune
+        state_mgr = getattr(self._bt_climate, "state_mgr", None)
+        if state_mgr is not None:
+            key = build_pid_key(self._bt_climate, self._trv_entity_id)
+            pid_state = state_mgr.state.pid.get(key)
+            if pid_state is not None and pid_state.auto_tune is not None:
+                return pid_state.auto_tune
 
         return DEFAULT_PID_AUTO_TUNE
 
@@ -126,19 +147,76 @@ class BetterThermostatPIDAutoTuneSwitch(SwitchEntity, RestoreEntity):
 
     def _update_state(self, state: bool):
         """Update the state."""
+        state_mgr = getattr(self._bt_climate, "state_mgr", None)
+        if state_mgr is None:
+            _LOGGER.debug(
+                "Cannot set PID auto-tune for %s: state manager not ready",
+                self._trv_entity_id,
+            )
+            return
+
         # Update persistent PID states (if any exist for this TRV)
         uid = resolve_unique_id(self._bt_climate)
         prefix = f"{uid}:{self._trv_entity_id}:"
 
-        for key, pid_state in _PID_STATES.items():
+        changed = False
+        for key, pid_state in state_mgr.state.pid.items():
             if key.startswith(prefix):
                 pid_state.auto_tune = state
+                changed = True
+        if changed:
+            state_mgr.mark_dirty()
+        else:
+            # No bucket for this TRV yet (fresh start or after a PID
+            # reset): seed the active bucket so the toggle is not lost.
+            key = build_pid_key(self._bt_climate, self._trv_entity_id)
+            pid_state = state_mgr.get_pid(key)
+            pid_state.auto_tune = state
+            state_mgr.set_pid(key, pid_state)
 
         self._bt_climate.schedule_save_state()
         self.async_write_ha_state()
 
 
-class BetterThermostatChildLockSwitch(SwitchEntity, RestoreEntity):
+def _switch_state_wins(
+    state: str | None, extra: Mapping[str, object] | None, configured: bool
+) -> bool | None:
+    """Return the child lock a restored switch state stands for, if it wins.
+
+    The switch and the configured option both set the lock, and the one set
+    last wins. The switch records the option next to its state; a recorded
+    option that differs from the current one was changed after the switch,
+    and then the option holds (``None``).
+    """
+    if state not in (STATE_ON, STATE_OFF):
+        return None
+    recorded = (extra or {}).get("configured")
+    if recorded is not None and recorded != configured:
+        return None
+    return state == STATE_ON
+
+
+def restored_child_lock(
+    hass: HomeAssistant, bt_unique_id: str, trv_entity_id: str, configured: bool
+) -> bool | None:
+    """Return the child lock the TRV's switch restores to, or ``None``.
+
+    Read before the switch itself is set up, so the thermostat's startup sends
+    the device the lock the switch will show rather than the option.
+    """
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "switch", DOMAIN, f"{bt_unique_id}_{trv_entity_id}_child_lock"
+    )
+    if entity_id is None:
+        return None
+    stored = restore_state.async_get(hass).last_states.get(entity_id)
+    if stored is None:
+        return None
+    extra = stored.extra_data.as_dict() if stored.extra_data else None
+    return _switch_state_wins(stored.state.state, extra, configured)
+
+
+class BetterThermostatChildLockSwitch(TrvNamedEntity, SwitchEntity, RestoreEntity):
     """Switch for Child Lock."""
 
     _attr_has_entity_name = True
@@ -150,14 +228,65 @@ class BetterThermostatChildLockSwitch(SwitchEntity, RestoreEntity):
         self._bt_climate = bt_climate
         self._trv_entity_id = trv_entity_id
         self._attr_unique_id = f"{bt_climate.unique_id}_{trv_entity_id}_child_lock"
-        self._attr_name = "Child Lock"
         if show_trv_name:
-            trv_state = bt_climate.hass.states.get(trv_entity_id)
-            trv_name = trv_state.name if trv_state and trv_state.name else trv_entity_id
             self._attr_translation_key = "child_lock"
-            self._attr_translation_placeholders = {"trv_name": trv_name}
+            self._attr_translation_placeholders = {
+                "trv_name": current_trv_name(bt_climate.hass, trv_entity_id)
+            }
         else:
             self._attr_translation_key = "child_lock_no_trv"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        self._follow_trv_name()
+        await self._restore_child_lock()
+
+    def _configured_child_lock(self) -> bool:
+        """Return the child-lock option the config entry holds for the TRV."""
+        for trv_config in self._bt_climate.all_trvs or []:
+            if trv_config.get("trv") == self._trv_entity_id:
+                return bool((trv_config.get("advanced") or {}).get(CONF_CHILD_LOCK))
+        return False
+
+    @property
+    def extra_restore_state_data(self) -> RestoredExtraData:
+        """Record the configured option next to the switch state.
+
+        A restore compares it with the option then configured; a difference
+        means the option was changed in the configuration after the switch.
+        """
+        return RestoredExtraData({"configured": self._configured_child_lock()})
+
+    async def _restore_child_lock(self) -> None:
+        """Put the switch state from before a reload or restart back on the TRV.
+
+        The switch and the configuration both set the lock, and the one set
+        last wins: the restored state, unless the option has changed since.
+        The thermostat takes the restored state over before its startup
+        sends the lock to the device; should the TRV still hold another one,
+        the restored state is sent after it.
+        """
+        trv = self._bt_climate.real_trvs.get(self._trv_entity_id)
+        last_state = await self.async_get_last_state()
+        if trv is None or last_state is None:
+            return
+        last_extra = await self.async_get_last_extra_data()
+        restored = _switch_state_wins(
+            last_state.state,
+            last_extra.as_dict() if last_extra else None,
+            self._configured_child_lock(),
+        )
+        if restored is None:
+            return
+        if trv.advanced is None:
+            trv.advanced = {}
+        held = bool(trv.advanced.get(CONF_CHILD_LOCK))
+        trv.advanced[CONF_CHILD_LOCK] = restored
+        if restored != held:
+            # The device may still report the state from before a command
+            # the startup sent, so the restored one is sent regardless.
+            await self._set_child_lock(restored, force=True)
 
     @property
     def device_info(self):
@@ -167,11 +296,10 @@ class BetterThermostatChildLockSwitch(SwitchEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return (
-            self._bt_climate.real_trvs[self._trv_entity_id]
-            .get("advanced", {})
-            .get("child_lock", False)
-        )
+        trv = self._bt_climate.real_trvs.get(self._trv_entity_id)
+        if trv is None:
+            return False
+        return (trv.advanced or {}).get("child_lock", False)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
@@ -185,15 +313,20 @@ class BetterThermostatChildLockSwitch(SwitchEntity, RestoreEntity):
 
     def _update_state(self, state: bool):
         """Update the state."""
-        if "advanced" not in self._bt_climate.real_trvs[self._trv_entity_id]:
-            self._bt_climate.real_trvs[self._trv_entity_id]["advanced"] = {}
-        self._bt_climate.real_trvs[self._trv_entity_id]["advanced"]["child_lock"] = (
-            state
-        )
+        trv = self._bt_climate.real_trvs.get(self._trv_entity_id)
+        if trv is None:
+            return
+        if trv.advanced is None:
+            trv.advanced = {}
+        trv.advanced["child_lock"] = state
         self.async_write_ha_state()
 
-    async def _set_child_lock(self, state: bool):
-        """Set the child lock on the real device."""
+    async def _set_child_lock(self, state: bool, *, force: bool = False):
+        """Set the child lock on the real device.
+
+        With ``force`` the command is sent even when the device already
+        reports the target state.
+        """
         entity_registry = er.async_get(self._bt_climate.hass)
         reg_entity = entity_registry.async_get(self._trv_entity_id)
 
@@ -202,25 +335,13 @@ class BetterThermostatChildLockSwitch(SwitchEntity, RestoreEntity):
 
         device_id = reg_entity.device_id
 
-        def find_entity(domains, keywords):
-            for ent in entity_registry.entities.values():
-                if ent.device_id != device_id or ent.domain not in domains:
-                    continue
-                name = (getattr(ent, "original_name", "") or "").lower()
-                uid = (ent.unique_id or "").lower()
-                eid = (ent.entity_id or "").lower()
-
-                if (
-                    any(k in name for k in keywords)
-                    or any(k in uid for k in keywords)
-                    or any(k in eid for k in keywords)
-                ):
-                    return ent.entity_id
-            return None
-
-        # Look for switch (Z2M) or lock
-        cl_entity = find_entity(
-            ["switch", "lock"], ["child_lock", "child lock", "lock"]
+        # Look for switch (Z2M) or lock. Prefer child-lock-specific names and
+        # only fall back to a bare "lock" match, so a device exposing several
+        # lock entities does not select the wrong one.
+        cl_entity = find_device_entity(
+            entity_registry, device_id, ["switch", "lock"], ["child_lock", "child lock"]
+        ) or find_device_entity(
+            entity_registry, device_id, ["switch", "lock"], ["lock"]
         )
 
         if cl_entity:
@@ -230,7 +351,7 @@ class BetterThermostatChildLockSwitch(SwitchEntity, RestoreEntity):
             try:
                 if domain == "switch":
                     cur = self._bt_climate.hass.states.get(cl_entity)
-                    if cur and cur.state != target_state:
+                    if cur and (force or cur.state != target_state):
                         _LOGGER.debug(
                             "Better Thermostat Child Lock: Setting child lock (switch) for %s to %s",
                             cl_entity,
@@ -243,7 +364,7 @@ class BetterThermostatChildLockSwitch(SwitchEntity, RestoreEntity):
                 elif domain == "lock":
                     target_lock = "locked" if state else "unlocked"
                     cur = self._bt_climate.hass.states.get(cl_entity)
-                    if cur and cur.state != target_lock:
+                    if cur and (force or cur.state != target_lock):
                         _LOGGER.debug(
                             "Better Thermostat Child Lock: Setting child lock (lock) for %s to %s",
                             cl_entity,
