@@ -652,3 +652,23 @@
       entity_id: switch.tv_light_controller_tv_street_lamp
     data: {}
   mode: single
+- id: '1793459569210'
+  alias: TV Street Lamp Midnight (-2h) Off
+  description: ''
+  triggers:
+  - trigger: sun.solar_midnight
+    options:
+      offset:
+        hours: 2
+        minutes: 0
+        seconds: 0
+        days: 0
+      offset_type: before
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    target:
+      entity_id: switch.tv_light_controller_tv_street_lamp
+    data: {}
+  mode: single
