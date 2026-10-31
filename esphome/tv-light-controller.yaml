@@ -1,0 +1,30 @@
+# Board: DOIT ESP32 DEVKIT V1 (DOIT)
+# Definition: definitions/boards/esp32doit-devkit-v1/manifest.yaml
+
+esphome:
+  name: tv-light-controller
+  friendly_name: TV Light Controller
+
+esp32:
+  variant: esp32
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: "ReZpJ1duwBiby0QIyOznga4vrDjdt7LbLAAvVjWM6dg="
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: TV Light Contro Fallback Hotspot
+    password: "gF5a5mGA1r1J"
+
+captive_portal:
