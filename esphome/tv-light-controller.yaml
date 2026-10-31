@@ -34,4 +34,4 @@ switch:
   - platform: gpio
     name: TV Street Lamp
     id: switch_gpio_1
-    pin: GPIO13
+    pin: GPIO12
