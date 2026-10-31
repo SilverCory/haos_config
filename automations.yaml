@@ -632,3 +632,23 @@
       message: TPMS Sensor Reading Low!
       title: TPMS Sensor Reading Low!
   mode: single
+- id: '1793459453768'
+  alias: TV Street Lamp Sunset On
+  description: ''
+  triggers:
+  - trigger: sun.sunset
+    options:
+      offset:
+        days: 0
+        hours: 0
+        minutes: 0
+        seconds: 0
+      offset_type: after
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    metadata: {}
+    target:
+      entity_id: switch.tv_light_controller_tv_street_lamp
+    data: {}
+  mode: single
