@@ -27,6 +27,7 @@ wifi:
     ssid: TV Light Contro Fallback Hotspot
     password: "gF5a5mGA1r1J"
 
+web_server:
 captive_portal:
 
 switch:
