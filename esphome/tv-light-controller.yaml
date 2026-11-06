@@ -84,6 +84,21 @@ switch:
           id: rave_mode
           state: OFF
       - script.stop: rave_strobe
-      # Using light.turn_off here ensures Home Assistant syncs the final OFF state
-      - light.turn_off: light_gpio_1
-      - light.turn_off: light_gpio_2
+      
+      # Restore TV Street Lamp to its previous state
+      - if:
+          condition:
+            light.is_on: light_gpio_1
+          then:
+            - output.turn_on: output_gpio_1
+          else:
+            - output.turn_off: output_gpio_1
+            
+      # Restore TV Snow House to its previous state
+      - if:
+          condition:
+            light.is_on: light_gpio_2
+          then:
+            - output.turn_on: output_gpio_2
+          else:
+            - output.turn_off: output_gpio_2
