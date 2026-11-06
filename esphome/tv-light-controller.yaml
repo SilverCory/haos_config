@@ -35,3 +35,7 @@ switch:
     name: TV Street Lamp
     id: switch_gpio_1
     pin: GPIO12
+  - platform: gpio
+    name: TV Snow House
+    id: switch_gpio_2
+    pin: GPIO14
