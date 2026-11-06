@@ -30,12 +30,38 @@ wifi:
 web_server:
 captive_portal:
 
+script:
+  - id: rave_strobe
+    then:
+      - while:
+          condition:
+            switch.is_on: rave_mode
+          then:
+            - switch.turn_on: switch_gpio_1
+            - switch.turn_on: switch_gpio_2
+            - delay: 100ms
+            - switch.turn_off: switch_gpio_1
+            - switch.turn_off: switch_gpio_2
+            - delay: 100ms
+
 switch:
   - platform: gpio
     name: TV Street Lamp
     id: switch_gpio_1
     pin: GPIO12
+    
   - platform: gpio
     name: TV Snow House
     id: switch_gpio_2
     pin: GPIO14
+    
+  - platform: template
+    name: "Rave Mode"
+    id: rave_mode
+    optimistic: true
+    turn_on_action:
+      - script.execute: rave_strobe
+    turn_off_action:
+      - script.stop: rave_strobe
+      - switch.turn_off: switch_gpio_1
+      - switch.turn_off: switch_gpio_2
