@@ -12,6 +12,11 @@ esp32:
     type: esp-idf
 
 logger:
+  # Turns off logging for lights, switches, and outputs
+  logs:
+    light: NONE
+    switch: NONE
+    output: NONE
 
 api:
   encryption:
@@ -30,6 +35,15 @@ wifi:
 web_server:
 captive_portal:
 
+output:
+  - platform: gpio
+    id: output_gpio_1
+    pin: GPIO12
+    
+  - platform: gpio
+    id: output_gpio_2
+    pin: GPIO14
+
 script:
   - id: rave_strobe
     then:
@@ -37,24 +51,25 @@ script:
           condition:
             switch.is_on: rave_mode
           then:
-            - switch.turn_on: switch_gpio_1
-            - switch.turn_off: switch_gpio_2
+            - light.turn_on: light_gpio_1
+            - light.turn_off: light_gpio_2
             - delay: 100ms
-            - switch.turn_off: switch_gpio_1
-            - switch.turn_on: switch_gpio_2
+            - light.turn_off: light_gpio_1
+            - light.turn_on: light_gpio_2
             - delay: 100ms
 
-switch:
-  - platform: gpio
+light:
+  - platform: binary
     name: TV Street Lamp
-    id: switch_gpio_1
-    pin: GPIO12
+    id: light_gpio_1
+    output: output_gpio_1
     
-  - platform: gpio
+  - platform: binary
     name: TV Snow House
-    id: switch_gpio_2
-    pin: GPIO14
+    id: light_gpio_2
+    output: output_gpio_2
     
+switch:
   - platform: template
     name: "Rave Mode"
     id: rave_mode
@@ -70,5 +85,5 @@ switch:
           id: rave_mode
           state: OFF
       - script.stop: rave_strobe
-      - switch.turn_off: switch_gpio_1
-      - switch.turn_off: switch_gpio_2
+      - light.turn_off: light_gpio_1
+      - light.turn_off: light_gpio_2
