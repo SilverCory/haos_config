@@ -38,10 +38,10 @@ script:
             switch.is_on: rave_mode
           then:
             - switch.turn_on: switch_gpio_1
-            - switch.turn_on: switch_gpio_2
+            - switch.turn_off: switch_gpio_2
             - delay: 100ms
             - switch.turn_off: switch_gpio_1
-            - switch.turn_off: switch_gpio_2
+            - switch.turn_on: switch_gpio_2
             - delay: 100ms
 
 switch:
@@ -58,10 +58,17 @@ switch:
   - platform: template
     name: "Rave Mode"
     id: rave_mode
-    optimistic: true
     turn_on_action:
+      # Explicitly set state to ON before starting the loop
+      - switch.template.publish:
+          id: rave_mode
+          state: ON
       - script.execute: rave_strobe
     turn_off_action:
+      # Explicitly set state to OFF and kill the script
+      - switch.template.publish:
+          id: rave_mode
+          state: OFF
       - script.stop: rave_strobe
       - switch.turn_off: switch_gpio_1
       - switch.turn_off: switch_gpio_2
