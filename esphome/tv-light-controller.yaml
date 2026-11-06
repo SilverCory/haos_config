@@ -51,11 +51,12 @@ script:
           condition:
             switch.is_on: rave_mode
           then:
-            - light.turn_on: light_gpio_1
-            - light.turn_off: light_gpio_2
+            # Target the output directly to avoid spamming Home Assistant updates
+            - output.turn_on: output_gpio_1
+            - output.turn_off: output_gpio_2
             - delay: 100ms
-            - light.turn_off: light_gpio_1
-            - light.turn_on: light_gpio_2
+            - output.turn_off: output_gpio_1
+            - output.turn_on: output_gpio_2
             - delay: 100ms
 
 light:
@@ -74,16 +75,15 @@ switch:
     name: "Rave Mode"
     id: rave_mode
     turn_on_action:
-      # Explicitly set state to ON before starting the loop
       - switch.template.publish:
           id: rave_mode
           state: ON
       - script.execute: rave_strobe
     turn_off_action:
-      # Explicitly set state to OFF and kill the script
       - switch.template.publish:
           id: rave_mode
           state: OFF
       - script.stop: rave_strobe
+      # Using light.turn_off here ensures Home Assistant syncs the final OFF state
       - light.turn_off: light_gpio_1
       - light.turn_off: light_gpio_2
