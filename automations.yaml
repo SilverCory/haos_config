@@ -676,4 +676,11 @@
     target:
       entity_id: switch.tv_light_controller_tv_street_lamp
     data: {}
+  - action: light.turn_off
+    metadata: {}
+    target:
+      entity_id:
+      - light.living_room_tv_light_controller_tv_snow_house
+      - light.living_room_tv_light_controller_tv_street_lamp
+    data: {}
   mode: single
