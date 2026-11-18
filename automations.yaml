@@ -671,11 +671,6 @@
       offset_type: before
   conditions: []
   actions:
-  - action: switch.turn_off
-    metadata: {}
-    target:
-      entity_id: switch.tv_light_controller_tv_street_lamp
-    data: {}
   - action: light.turn_off
     metadata: {}
     target:
