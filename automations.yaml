@@ -335,8 +335,8 @@
     domain: binary_sensor
     trigger: device
     for:
-      hours: 0
-      minutes: 15
+      hours: 1
+      minutes: 0
       seconds: 0
   conditions: []
   actions:
